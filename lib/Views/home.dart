@@ -3,6 +3,7 @@ import 'dart:async';
 
 import 'package:flutter/material.dart';
 import 'package:fl_chart/fl_chart.dart';
+import 'package:soltwin_se2702/Dialogs/pid_dialog.dart';
 
 
 class HomePage extends StatefulWidget {
@@ -41,7 +42,7 @@ class _HomePageState extends State<HomePage> {
   @override
   Widget build(BuildContext context){
     final currentWidth = MediaQuery.of(context).size.width;
-    final currentHeight = MediaQuery.of(context).size.height;
+    //final currentHeight = MediaQuery.of(context).size.height;
     return Scaffold(
       appBar: AppBar(
         backgroundColor: Colors.indigo[900],
@@ -54,7 +55,7 @@ class _HomePageState extends State<HomePage> {
               padding: const EdgeInsets.all(20.0),
               child: Container(
                 width: currentWidth * 50/100,
-                height: currentHeight * 30/100,
+                //height: currentHeight * 30/100,
                 decoration: BoxDecoration(
                   borderRadius: BorderRadius.circular(20),
                   /*gradient: const LinearGradient(
@@ -107,7 +108,9 @@ class _HomePageState extends State<HomePage> {
                           const SizedBox(width: 12,),
                           ElevatedButton(
                             onPressed: (){
-
+                              showDialog(context: context, builder: (context){
+                                return const PIDDialog();
+                              });
                             },
                             child: const Text('PID Tuner')
                           ),
@@ -132,7 +135,8 @@ class _HomePageState extends State<HomePage> {
                         color: Colors.black.withOpacity(0.4),
                         offset: const Offset(-10, 15),
                         blurRadius: 10,
-                        spreadRadius: 3)
+                        spreadRadius: 3
+                    )
                   ],
                 ),
                 child: Column(
@@ -146,7 +150,7 @@ class _HomePageState extends State<HomePage> {
                     ),
                     const SizedBox(height: 24,),
                     cosPoints.isNotEmpty ? AspectRatio(
-                      aspectRatio: 5,
+                      aspectRatio: 3,
                       child: Padding(
                         padding: const EdgeInsets.only(bottom: 24.0),
                         child: LineChart(
