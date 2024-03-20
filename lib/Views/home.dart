@@ -3,9 +3,11 @@ import 'dart:async';
 
 import 'package:flutter/material.dart';
 import 'package:fl_chart/fl_chart.dart';
+import 'package:soltwin_se2702/Animation/water_level_animation.dart';
 import 'package:soltwin_se2702/Dialogs/pid_dialog.dart';
 import 'package:soltwin_se2702/Services/socketio.dart';
 import 'package:soltwin_se2702/Services/websocket.dart';
+import 'package:lottie/lottie.dart';
 
 
 class HomePage extends StatefulWidget {
@@ -19,7 +21,7 @@ class _HomePageState extends State<HomePage> {
   WebSocketServices? webSocketServices;
   SocketIOManager? socketIOManager;
 
-  final limitCount = 100;
+  final limitCount = 2000;
   final sinPoints = <FlSpot>[];
   final cosPoints = <FlSpot>[];
 
@@ -50,10 +52,13 @@ class _HomePageState extends State<HomePage> {
   @override
   void initState() {
     super.initState();
-    timer = Timer.periodic(const Duration(milliseconds: 40), (timer) {
+    timer = Timer.periodic(const Duration(milliseconds: 50), (timer) {
       while (sinPoints.length > limitCount) {
         sinPoints.removeAt(0);
         cosPoints.removeAt(0);
+        setState(() {
+          timer.cancel();
+        });
       }
       setState(() {
         sinPoints.add(FlSpot(xValue, math.sin(xValue)));
@@ -70,81 +75,278 @@ class _HomePageState extends State<HomePage> {
     return Scaffold(
       appBar: AppBar(
         backgroundColor: Colors.indigo[900],
+        //leading: ,
+        title: const Text(
+          'SOLTWIN',
+          style: TextStyle(
+            fontSize: 24,
+            color: Colors.white,
+            letterSpacing: 1.2,
+          ),
+        ),
+        centerTitle: true,
+        actions: [
+          TextButton(
+              onPressed: (){},
+              child: const Text(
+                'Login',
+                style: TextStyle(
+                  letterSpacing: 1.2,
+                  color: Colors.white
+                ),
+              ))
+        ],
       ),
       body: SingleChildScrollView(
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            Padding(
-              padding: const EdgeInsets.all(20.0),
-              child: Container(
-                width: currentWidth * 50/100,
-                //height: currentHeight * 30/100,
-                decoration: BoxDecoration(
-                  borderRadius: BorderRadius.circular(20),
-                  /*gradient: const LinearGradient(
-                    begin: Alignment.topRight,
-                    end: Alignment.bottomLeft,
-                    colors: [
-                      Colors.black,
-                      Colors.deepPurple,
-                      //isDarkMode ? const Color.fromRGBO(20, 20, 30, 1):Colors.white,
-                      //isDarkMode ? const Color.fromRGBO(41, 50, 91, 1):Colors.lightBlueAccent,
-                    ],
-                  ),*/
-                  color: Colors.blueGrey[500],
-                  boxShadow: [
-                    BoxShadow(
-                        color: Colors.black.withOpacity(0.4),
-                        offset: const Offset(-10, 15),
-                        blurRadius: 10,
-                        spreadRadius: 3)
-                  ],
+            Row(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Stack(
+                  children: [
+                    Image.asset(
+                      'assets/images/P&ID-SE2702.png',
+                      filterQuality: FilterQuality.high,
+                      fit: BoxFit.fill,
+                    ),
+                    //Cylinder Tank
+                    const Positioned(
+                        bottom: 38,
+                        left: 151,
+                        child: WaterLevelAnimation(width: 70, height: 45,)
+                    ),
+                    //Water Tank
+                    const Positioned(
+                      bottom: 38,
+                      left: 151,
+                      child: WaterLevelAnimation(width: 70, height: 45,)
+                    ),
+                    //Lottie.asset('assets/lotties/arrow-lottie.json')
+                  ]
                 ),
-                child: Padding(
+                Padding(
                   padding: const EdgeInsets.all(20.0),
-                  child: Column(
-                    mainAxisAlignment: MainAxisAlignment.start,
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      const Text(
-                        'FacePlate SE270-2',
-                        style: TextStyle(
-                          fontSize: 20
-                        ),
+                  child: Container(
+                    //width: currentWidth * 50/100,
+                    //height: currentHeight * 30/100,
+                      decoration: BoxDecoration(
+                        borderRadius: BorderRadius.circular(12),
+                        color: Colors.blueGrey[500],
+                        boxShadow: [
+                          BoxShadow(
+                            color: Colors.black.withOpacity(0.4),
+                            offset: const Offset(-10, 15),
+                            blurRadius: 10,
+                            spreadRadius: 3)
+                        ],
                       ),
-                      const SizedBox(height: 24,),
-                      Row(
+                      child: Padding(
+                        padding: const EdgeInsets.all(20.0),
+                        child: Column(
+                          mainAxisAlignment: MainAxisAlignment.start,
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          mainAxisSize: MainAxisSize.max,
+                          children: [
+                            const Text(
+                              'EQUIPMENT CONTROL',
+                              style: TextStyle(
+                                  fontSize: 24
+                              ),
+                            ),
+                            const Divider(
+                              height: 24,
+                            ),
+                            Row(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              mainAxisAlignment: MainAxisAlignment.start,
+                              mainAxisSize: MainAxisSize.max,
+                              children: [
+                                ElevatedButton(
+                                    onPressed: (){
+
+                                    },
+                                    style: ButtonStyle(
+                                      shape: MaterialStateProperty.all<RoundedRectangleBorder>(
+                                        RoundedRectangleBorder(
+                                          borderRadius: BorderRadius.circular(4.0),
+                                        ),
+                                      ),
+                                      minimumSize: MaterialStateProperty.all<Size>(
+                                          const Size(100, 48)
+                                      ),
+                                    ),
+                                    child: const Text('Start')
+                                ),
+                                const SizedBox(width: 12,),
+                                ElevatedButton(
+                                    onPressed: (){
+
+                                    },
+                                    style: ButtonStyle(
+                                      shape: MaterialStateProperty.all<RoundedRectangleBorder>(
+                                        RoundedRectangleBorder(
+                                          borderRadius: BorderRadius.circular(4.0),
+                                        ),
+                                      ),
+                                      minimumSize: MaterialStateProperty.all<Size>(
+                                          const Size(100, 48)
+                                      ),
+                                    ),
+                                    child: const Text('Stop')
+                                ),
+                              ],
+                            ),
+                            const SizedBox(height: 28,),
+                            const Text(
+                              'PID Control',
+                              style: TextStyle(
+                                  fontSize: 20
+                              ),
+                            ),
+                            const SizedBox(height: 12,),
+                            Row(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              mainAxisAlignment: MainAxisAlignment.start,
+                              mainAxisSize: MainAxisSize.max,
+                              children: [
+                                ElevatedButton(
+                                    onPressed: (){
+                                      showDialog(context: context, builder: (context){
+                                        return const PIDDialog();
+                                      });
+                                    },
+                                    style: ButtonStyle(
+                                      shape: MaterialStateProperty.all<RoundedRectangleBorder>(
+                                        RoundedRectangleBorder(
+                                          borderRadius: BorderRadius.circular(4.0),
+                                        ),
+                                      ),
+                                      minimumSize: MaterialStateProperty.all<Size>(
+                                          const Size(100, 48)
+                                      ),
+                                    ),
+                                    child: const Text('PID Tuner')
+                                ),
+                              ],
+                            ),
+                          ],
+                        ),
+                      )
+                  ),
+                ),
+                Padding(
+                  padding: const EdgeInsets.all(20.0),
+                  child: Container(
+                    //width: currentWidth * 50/100,
+                    //height: currentHeight * 30/100,
+                    decoration: BoxDecoration(
+                      borderRadius: BorderRadius.circular(12),
+                      color: Colors.blueGrey[500],
+                      boxShadow: [
+                        BoxShadow(
+                            color: Colors.black.withOpacity(0.4),
+                            offset: const Offset(-10, 15),
+                            blurRadius: 10,
+                            spreadRadius: 3)
+                      ],
+                    ),
+                    child: Padding(
+                      padding: const EdgeInsets.all(20.0),
+                      child: Column(
+                        mainAxisAlignment: MainAxisAlignment.start,
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        mainAxisSize: MainAxisSize.max,
                         children: [
-                          ElevatedButton(
-                            onPressed: (){
-
-                            },
-                            child: const Text('Start')
+                          const Text(
+                            'FACEPLATE SE270-2',
+                            style: TextStyle(
+                              fontSize: 24
+                            ),
                           ),
-                          const SizedBox(width: 12,),
-                          ElevatedButton(
-                            onPressed: (){
-
-                            },
-                            child: const Text('Stop')
+                          const Divider(
+                            height: 24,
                           ),
-                          const SizedBox(width: 12,),
-                          ElevatedButton(
-                            onPressed: (){
-                              showDialog(context: context, builder: (context){
-                                return const PIDDialog();
-                              });
-                            },
-                            child: const Text('PID Tuner')
+                          Row(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            mainAxisAlignment: MainAxisAlignment.start,
+                            mainAxisSize: MainAxisSize.max,
+                            children: [
+                              ElevatedButton(
+                                  onPressed: (){
+
+                                  },
+                                  style: ButtonStyle(
+                                    shape: MaterialStateProperty.all<RoundedRectangleBorder>(
+                                        RoundedRectangleBorder(
+                                          borderRadius: BorderRadius.circular(4.0),
+                                        ),
+                                    ),
+                                    minimumSize: MaterialStateProperty.all<Size>(
+                                      const Size(100, 48)
+                                    ),
+                                  ),
+                                  child: const Text('Start')
+                              ),
+                              const SizedBox(width: 12,),
+                              ElevatedButton(
+                                  onPressed: (){
+
+                                  },
+                                  style: ButtonStyle(
+                                    shape: MaterialStateProperty.all<RoundedRectangleBorder>(
+                                      RoundedRectangleBorder(
+                                        borderRadius: BorderRadius.circular(4.0),
+                                      ),
+                                    ),
+                                    minimumSize: MaterialStateProperty.all<Size>(
+                                        const Size(100, 48)
+                                    ),
+                                  ),
+                                  child: const Text('Stop')
+                              ),
+                            ],
+                          ),
+                          const SizedBox(height: 28,),
+                          const Text(
+                            'PID Control',
+                            style: TextStyle(
+                                fontSize: 20
+                            ),
+                          ),
+                          const SizedBox(height: 12,),
+                          Row(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            mainAxisAlignment: MainAxisAlignment.start,
+                            mainAxisSize: MainAxisSize.max,
+                            children: [
+                              ElevatedButton(
+                                  onPressed: (){
+                                    showDialog(context: context, builder: (context){
+                                      return const PIDDialog();
+                                    });
+                                  },
+                                  style: ButtonStyle(
+                                    shape: MaterialStateProperty.all<RoundedRectangleBorder>(
+                                      RoundedRectangleBorder(
+                                        borderRadius: BorderRadius.circular(4.0),
+                                      ),
+                                    ),
+                                    minimumSize: MaterialStateProperty.all<Size>(
+                                        const Size(100, 48)
+                                    ),
+                                  ),
+                                  child: const Text('PID Tuner')
+                              ),
+                            ],
                           ),
                         ],
                       ),
-
-                    ],
+                    )
                   ),
-                )
-              ),
+                ),
+              ],
             ),
             Padding(
               padding: const EdgeInsets.all(20),
@@ -166,28 +368,33 @@ class _HomePageState extends State<HomePage> {
                 child: Column(
                   mainAxisAlignment: MainAxisAlignment.start,
                   children: [
-                    const Text(
-                      'SE270-2 PROCESS CONTROL CHART',
-                      style: TextStyle(
-                        fontSize: 24
+                    const Padding(
+                      padding: EdgeInsets.all(24.0),
+                      child: Text(
+                        'SE270-2 PROCESS CONTROL CHART',
+                        style: TextStyle(
+                          fontSize: 24
+                        ),
                       ),
                     ),
-                    const SizedBox(height: 24,),
+                    //const SizedBox(height: 24,),
                     cosPoints.isNotEmpty ? AspectRatio(
-                      aspectRatio: 3,
+                      aspectRatio: 3.5,
                       child: Padding(
-                        padding: const EdgeInsets.only(bottom: 24.0),
+                        padding: const EdgeInsets.all(24.0),
                         child: LineChart(
                           LineChartData(
                             minY: -1,
                             maxY: 1,
-                            minX: sinPoints.first.x,
-                            maxX: sinPoints.last.x,
-                            lineTouchData: const LineTouchData(enabled: false),
+                            minX: 0,//sinPoints.first.x,
+                            maxX: 100,//sinPoints.last.x,
+                            /*lineTouchData: const LineTouchData(
+                                enabled: true
+                            ),*/
                             clipData: const FlClipData.all(),
                             gridData: const FlGridData(
                               show: true,
-                              drawVerticalLine: false,
+                              drawVerticalLine: true,
                             ),
                             borderData: FlBorderData(show: false),
                             lineBarsData: [
@@ -195,7 +402,22 @@ class _HomePageState extends State<HomePage> {
                               cosLine(cosPoints),
                             ],
                             titlesData: const FlTitlesData(
-                              show: false,
+                              topTitles: AxisTitles(
+                                sideTitles: SideTitles(showTitles: false)
+                              ),
+                              rightTitles: AxisTitles(
+                                sideTitles: SideTitles(showTitles: false)
+                              ),
+                              bottomTitles: AxisTitles(
+                                sideTitles: SideTitles(
+                                    showTitles: true
+                                )
+                              ),
+                              leftTitles: AxisTitles(
+                                sideTitles: SideTitles(
+                                    showTitles: true
+                                )
+                              ),
                             ),
                           ),
                         ),

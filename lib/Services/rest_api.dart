@@ -26,4 +26,38 @@ class APIServices{
       print('Error: ${response.statusCode}');
     }
   }
+
+  ///Post Login
+  Future<bool> loginReq(String username, String password) async {
+    http.Response response = await http.post(
+        Uri.parse('$_baseURL/auth/login'),
+        body: {
+          'username': username,
+          'password': password
+        }
+    );
+
+    if(response.statusCode == 200) {
+      print('Login Successfully');
+      final responseJson = jsonDecode(response.body);
+      String retrieveToken = responseJson['token'].toString();
+      String retrieveUsername = responseJson['user']['username'].toString();
+
+      /*///Saved token for further used
+      print(retrieveToken);
+      setUserToken(retrieveToken);
+
+      Provider.of<UserInfoProvider>(NavigationService.navigatorKey.currentContext!,listen: false).setUserFullName(retrieveUsername);
+      Provider.of<UserInfoProvider>(NavigationService.navigatorKey.currentContext!,listen: false).setUserRoles(retrieveRole);
+      print(Provider.of<UserInfoProvider>(NavigationService.navigatorKey.currentContext!,listen: false).userFullName);
+      print(Provider.of<UserInfoProvider>(NavigationService.navigatorKey.currentContext!,listen: false).userRole);*/
+      return true;
+
+    }
+    else{
+      print('Wrong Username or Password');
+      return false;
+    }
+  }
+
 }

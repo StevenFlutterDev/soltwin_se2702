@@ -40,6 +40,7 @@ dependencies:
   socket_io_client: ^2.0.3+1
   http: ^1.2.0
   web_socket_channel: ^2.4.0
+  lottie: ^3.1.0
 
 dev_dependencies:
   flutter_test:
@@ -65,7 +66,9 @@ flutter:
 
   # To add assets to your application, add an assets section, like this:
   assets:
-    - assets/images/P&ID-SE2702.jpeg
+    - assets/images/P&ID-SE2702.png
+    - assets/images/SOLLOGO.png
+    - assets/lotties/arrow-lotties.json
 
   # An image asset can refer to one or more resolution-specific "variants", see
   # https://flutter.dev/assets-and-images/#resolution-aware
