@@ -4,6 +4,8 @@ import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:fl_chart/fl_chart.dart';
 import 'package:soltwin_se2702/Dialogs/pid_dialog.dart';
+import 'package:soltwin_se2702/Services/socketio.dart';
+import 'package:soltwin_se2702/Services/websocket.dart';
 
 
 class HomePage extends StatefulWidget {
@@ -14,6 +16,9 @@ class HomePage extends StatefulWidget {
 }
 
 class _HomePageState extends State<HomePage> {
+  WebSocketServices? webSocketServices;
+  SocketIOManager? socketIOManager;
+
   final limitCount = 100;
   final sinPoints = <FlSpot>[];
   final cosPoints = <FlSpot>[];
@@ -22,6 +27,25 @@ class _HomePageState extends State<HomePage> {
   double step = 0.05;
 
   late Timer timer;
+
+  void startConnections() {
+    webSocketServices = WebSocketServices('ws://example.com/socket');
+    webSocketServices?.onMessageReceived = (message) {
+      print('WebSocket message: $message');
+      // Update your UI or data model based on WebSocket messages
+    };
+
+    socketIOManager = SocketIOManager('http://example.com');
+    socketIOManager?.onMessageReceived = (message) {
+      print('Socket.IO message: $message');
+      // Update your UI or data model based on Socket.IO messages
+    };
+  }
+
+  void stopConnections() {
+    webSocketServices?.disconnect();
+    socketIOManager?.close();
+  }
 
   @override
   void initState() {

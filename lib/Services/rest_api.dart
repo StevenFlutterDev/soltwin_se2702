@@ -1,16 +1,29 @@
+import 'dart:convert';
 import 'package:http/http.dart' as http;
 
-
 class APIServices{
-  /*Future<List<Station>?> getStationsPost() async{
-    var client = http.Client();
+  final String _baseURL = 'http://127.0.0.1';
+  late String _sessionID;
 
-    var uri = Uri.parse('$host/stations'); ///Replace Uri after Jun API service is ready
-    var response = await client.get(uri);
-    if(response.statusCode == 200){
-      var json = response.body;
-      return postFromJsonStation(json);
+  // You can set the session ID through the constructor or a separate method
+  APIServices(this._sessionID);
+
+  Future<void> postValue(double p) async {
+    Uri uri = Uri.parse('$_baseURL/$_sessionID/p');
+    var response = await http.post(
+      uri,
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: jsonEncode({'p': p}),
+    );
+
+    if (response.statusCode == 200) {
+      // Handle success
+      print('Success: ${response.body}');
+    } else {
+      // Handle error
+      print('Error: ${response.statusCode}');
     }
-    return null;
-  }*/
+  }
 }
