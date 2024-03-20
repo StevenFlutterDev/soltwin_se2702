@@ -75,7 +75,10 @@ class _HomePageState extends State<HomePage> {
     return Scaffold(
       appBar: AppBar(
         backgroundColor: Colors.indigo[900],
-        //leading: ,
+        leading: Image.asset(
+          'assets/images/SOLLOGO.png',
+          fit: BoxFit.fitWidth,
+        ),
         title: const Text(
           'SOLTWIN',
           style: TextStyle(
@@ -123,7 +126,86 @@ class _HomePageState extends State<HomePage> {
                       left: 151,
                       child: WaterLevelAnimation(width: 70, height: 45,)
                     ),
-                    //Lottie.asset('assets/lotties/arrow-lottie.json')
+                    Positioned(
+                      left: 100,
+                      child: Lottie.asset(
+                        'assets/lotties/arrow-lottie.json',
+                        width: 50,
+                        height: 100
+                      )
+                    ),
+                    Positioned(
+                      left: 200,
+                      top: 80,
+                      child: Transform.rotate(
+                        angle: 3.142, //90Deg = 1.571, 180Deg = 3.142, 270Deg = 4.712,
+                        child: Lottie.asset(
+                          'assets/lotties/arrow-lottie.json',
+                          width: 50,
+                          height: 50
+                        ),
+                      )
+                    ),
+                    Positioned(
+                      left: 200,
+                      top: 130,
+                      child: Transform.rotate(
+                        angle: 3.142, //90Deg = 1.571, 180Deg = 3.142, 270Deg = 4.712,
+                        child: Lottie.asset(
+                          'assets/lotties/arrow-lottie.json',
+                          width: 50,
+                          height: 50
+                        ),
+                      )
+                    ),
+                    Positioned(
+                      left: 250,
+                      top: 155,
+                      child: Transform.rotate(
+                        angle: 1.571, //90Deg = 1.571, 180Deg = 3.142, 270Deg = 4.712,
+                        child: Lottie.asset(
+                          'assets/lotties/arrow-lottie.json',
+                          width: 50,
+                          height: 50
+                        ),
+                      )
+                    ),
+                    Positioned(
+                      left: 375,
+                      top: 155,
+                      child: Transform.rotate(
+                        angle: 1.571, //90Deg = 1.571, 180Deg = 3.142, 270Deg = 4.712,
+                        child: Lottie.asset(
+                          'assets/lotties/arrow-lottie.json',
+                          width: 50,
+                          height: 50
+                        ),
+                      )
+                    ),
+                    Positioned(
+                        left: 450,
+                        top: 250,
+                        child: Transform.rotate(
+                          angle: 3.142, //90Deg = 1.571, 180Deg = 3.142, 270Deg = 4.712,
+                          child: Lottie.asset(
+                              'assets/lotties/arrow-lottie.json',
+                              width: 50,
+                              height: 50
+                          ),
+                        )
+                    ),
+                    Positioned(
+                        left: 300,
+                        top: 400,
+                        child: Transform.rotate(
+                          angle: 4.712, //90Deg = 1.571, 180Deg = 3.142, 270Deg = 4.712,
+                          child: Lottie.asset(
+                              'assets/lotties/arrow-lottie.json',
+                              width: 50,
+                              height: 50
+                          ),
+                        )
+                    ),
                   ]
                 ),
                 Padding(

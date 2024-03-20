@@ -68,7 +68,7 @@ flutter:
   assets:
     - assets/images/P&ID-SE2702.png
     - assets/images/SOLLOGO.png
-    - assets/lotties/arrow-lotties.json
+    - assets/lotties/
 
   # An image asset can refer to one or more resolution-specific "variants", see
   # https://flutter.dev/assets-and-images/#resolution-aware
