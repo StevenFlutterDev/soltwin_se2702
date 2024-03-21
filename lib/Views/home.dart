@@ -1,5 +1,7 @@
 import 'dart:math' as math;
 import 'dart:async';
+import 'dart:io';
+import 'dart:convert';
 
 import 'package:flutter/material.dart';
 import 'package:fl_chart/fl_chart.dart';
@@ -19,8 +21,13 @@ class HomePage extends StatefulWidget {
 }
 
 class _HomePageState extends State<HomePage> {
+  //Websocket
   WebSocketServices? webSocketServices;
   SocketIOManager? socketIOManager;
+
+  //TCP
+  Socket? _tcpSocket;
+  late Timer _dataTimer;
 
   bool p201Stat = false;
   bool sv203Stat = false;
@@ -47,7 +54,7 @@ class _HomePageState extends State<HomePage> {
 
   late Timer timer;
 
-  void startConnections() {
+  void startWSConnections() {
     webSocketServices = WebSocketServices('ws://example.com/socket');
     webSocketServices?.onMessageReceived = (message) {
       print('WebSocket message: $message');
@@ -61,9 +68,35 @@ class _HomePageState extends State<HomePage> {
     };
   }
 
-  void stopConnections() {
+  void stopWSConnections() {
     webSocketServices?.disconnect();
     socketIOManager?.close();
+  }
+
+  void startTcpConnection() async {
+    try {
+      _tcpSocket = await Socket.connect('192.168.1.100', 3000); // Use your server's IP and port
+      _tcpSocket!.listen((List<int> data) {
+        var jsonString = String.fromCharCodes(data).trim();
+        var jsonData = jsonDecode(jsonString);
+        processTcpData(jsonData);
+      });
+    } catch (e) {
+      print('Failed to connect to TCP server: $e');
+    }
+  }
+
+  void processTcpData(dynamic jsonData) {
+    // Assuming jsonData is a Map<String, dynamic>
+    setState(() {
+      pvValue = double.parse(jsonData['pv'] ?? '0');
+      mvValue = double.parse(jsonData['mv'] ?? '0');
+      // Update your chart or state based on new data
+    });
+  }
+
+  void stopTcpConnection() {
+    _tcpSocket?.close();
   }
 
   @override
@@ -83,6 +116,8 @@ class _HomePageState extends State<HomePage> {
       });
       xValue += step;
     });
+
+    startTcpConnection();  // Start TCP connection when the widget is initialized
   }
 
   @override
@@ -754,6 +789,7 @@ class _HomePageState extends State<HomePage> {
   @override
   void dispose() {
     timer.cancel();
+    stopTcpConnection();  // Close the TCP connection when the widget is disposed
     super.dispose();
   }
 
