@@ -5,6 +5,7 @@ import 'package:flutter/material.dart';
 import 'package:fl_chart/fl_chart.dart';
 import 'package:soltwin_se2702/Animation/water_level_animation.dart';
 import 'package:soltwin_se2702/Dialogs/pid_dialog.dart';
+import 'package:soltwin_se2702/Services/rest_api.dart';
 import 'package:soltwin_se2702/Services/socketio.dart';
 import 'package:soltwin_se2702/Services/websocket.dart';
 import 'package:lottie/lottie.dart';
@@ -21,7 +22,23 @@ class _HomePageState extends State<HomePage> {
   WebSocketServices? webSocketServices;
   SocketIOManager? socketIOManager;
 
-  final limitCount = 2000;
+  bool p201Stat = false;
+  bool sv203Stat = false;
+  bool tankFilled = false;
+  bool powerStat = false;
+
+  bool shouldAnimateTank = false;
+  bool shouldAnimateCylinder = false;
+
+  bool shouldReverseTank = false;
+  bool shouldReverseCylinder = false;
+
+  double pvValue = 50.0;
+  double mvValue = 30.0;
+  double svValue = 50.0;
+
+
+  final limitCount = 1000;
   final sinPoints = <FlSpot>[];
   final cosPoints = <FlSpot>[];
 
@@ -114,97 +131,217 @@ class _HomePageState extends State<HomePage> {
                       filterQuality: FilterQuality.high,
                       fit: BoxFit.fill,
                     ),
-                    //Cylinder Tank
-                    const Positioned(
-                        bottom: 38,
-                        left: 151,
-                        child: WaterLevelAnimation(width: 70, height: 45,)
-                    ),
-                    //Water Tank
-                    const Positioned(
-                      bottom: 38,
-                      left: 151,
-                      child: WaterLevelAnimation(width: 70, height: 45,)
-                    ),
+                    //LED P-201
                     Positioned(
-                      left: 100,
-                      child: Lottie.asset(
-                        'assets/lotties/arrow-lottie.json',
-                        width: 50,
-                        height: 100
-                      )
+                      right: 35,
+                      top: 40,
+                      child: Row(
+                        children: [
+                          Container(
+                            width: 20.0,
+                            height: 20.0,
+                            decoration: BoxDecoration(
+                              color: powerStat ? Colors.green : Colors.grey,
+                              shape: BoxShape.circle,
+                              boxShadow: [
+                                BoxShadow(
+                                  color: powerStat ? Colors.green[200]! : Colors.black,
+                                  blurRadius: 10.0,
+                                  spreadRadius: 5.0,
+                                ),
+                              ],
+                            ),
+                          ),
+                          const SizedBox(width: 4,),
+                          const Text('Power Status'),
+                        ],
+                      ),
                     ),
+                    //LED P-201
                     Positioned(
-                      left: 200,
-                      top: 80,
-                      child: Transform.rotate(
-                        angle: 3.142, //90Deg = 1.571, 180Deg = 3.142, 270Deg = 4.712,
+                      right: 35,
+                      bottom: 40,
+                      child: Row(
+                        children: [
+                          Container(
+                            width: 12.0,
+                            height: 12.0,
+                            decoration: BoxDecoration(
+                              color: powerStat & p201Stat ? Colors.green : Colors.grey,
+                              shape: BoxShape.circle,
+                              boxShadow: [
+                                BoxShadow(
+                                  color: powerStat & p201Stat ? Colors.green[200]! : Colors.black,
+                                  blurRadius: 10.0,
+                                  spreadRadius: 5.0,
+                                ),
+                              ],
+                            ),
+                          ),
+                          const SizedBox(width: 4,),
+                          const Text('P-201'),
+                        ],
+                      ),
+                    ),
+                    //LED SV-203
+                    Positioned(
+                      right: 15,
+                      bottom: 160,
+                      child: Row(
+                        children:[
+                          Container(
+                            width: 12.0,
+                            height: 12.0,
+                            decoration: BoxDecoration(
+                              color: powerStat & sv203Stat ? Colors.green : Colors.grey,
+                              shape: BoxShape.circle,
+                              boxShadow: [
+                                BoxShadow(
+                                  color: powerStat & sv203Stat ? Colors.green[200]! : Colors.black,
+                                  blurRadius: 10.0,
+                                  spreadRadius: 5.0,
+                                ),
+                              ],
+                            ),
+                          ),
+                          const SizedBox(width: 4,),
+                          const Text('SV-203'),
+                        ],
+                      ),
+                    ),
+                    //Cylinder Tank Animation
+                    Positioned(
+                        top: 80,
+                        left: 154,
+                        child: WaterLevelAnimation(
+                          width: 10,
+                          height: 130,
+                          shouldAnimate: powerStat && p201Stat && sv203Stat && tankFilled,
+                          shouldReverse: !powerStat || !p201Stat || !sv203Stat || !tankFilled,)
+                    ),
+                    //Water Tank Animation
+                    Positioned(
+                      bottom: 40,
+                      left: 153,
+                      child: WaterLevelAnimation(width: 22, height: 45, shouldAnimate: shouldAnimateTank, shouldReverse: shouldReverseTank,)
+                    ),
+                    //Arrow
+                    Visibility(
+                      visible: sv203Stat && powerStat && p201Stat && tankFilled,
+                      child: Positioned(
+                        left: 110,
+                        top: 90,
                         child: Lottie.asset(
                           'assets/lotties/arrow-lottie.json',
                           width: 50,
-                          height: 50
-                        ),
-                      )
+                          height: 100
+                        )
+                      ),
                     ),
-                    Positioned(
-                      left: 200,
-                      top: 130,
-                      child: Transform.rotate(
-                        angle: 3.142, //90Deg = 1.571, 180Deg = 3.142, 270Deg = 4.712,
-                        child: Lottie.asset(
-                          'assets/lotties/arrow-lottie.json',
-                          width: 50,
-                          height: 50
-                        ),
-                      )
+                    Visibility(
+                      visible: sv203Stat && powerStat && p201Stat && tankFilled,
+                      child: Positioned(
+                        left: 160,
+                        top: 20,
+                        child: Transform.rotate(
+                          angle: 1.571, //90Deg = 1.571, 180Deg = 3.142, 270Deg = 4.712,
+                          child: Lottie.asset(
+                            'assets/lotties/arrow-lottie.json',
+                            width: 50,
+                            height: 50
+                          ),
+                        )
+                      ),
                     ),
-                    Positioned(
-                      left: 250,
-                      top: 155,
-                      child: Transform.rotate(
-                        angle: 1.571, //90Deg = 1.571, 180Deg = 3.142, 270Deg = 4.712,
-                        child: Lottie.asset(
-                          'assets/lotties/arrow-lottie.json',
-                          width: 50,
-                          height: 50
-                        ),
-                      )
-                    ),
-                    Positioned(
-                      left: 375,
-                      top: 155,
-                      child: Transform.rotate(
-                        angle: 1.571, //90Deg = 1.571, 180Deg = 3.142, 270Deg = 4.712,
-                        child: Lottie.asset(
-                          'assets/lotties/arrow-lottie.json',
-                          width: 50,
-                          height: 50
-                        ),
-                      )
-                    ),
-                    Positioned(
-                        left: 450,
-                        top: 250,
+                    Visibility(
+                      visible: sv203Stat && powerStat && p201Stat && tankFilled,
+                      child: Positioned(
+                        left: 200,
+                        top: 110,
                         child: Transform.rotate(
                           angle: 3.142, //90Deg = 1.571, 180Deg = 3.142, 270Deg = 4.712,
                           child: Lottie.asset(
-                              'assets/lotties/arrow-lottie.json',
-                              width: 50,
-                              height: 50
+                            'assets/lotties/arrow-lottie.json',
+                            width: 50,
+                            height: 50
                           ),
                         )
+                      ),
                     ),
-                    Positioned(
-                        left: 300,
-                        top: 400,
+                    Visibility(
+                      visible: sv203Stat && powerStat && p201Stat && tankFilled,
+                      child: Positioned(
+                        left: 250,
+                        top: 155,
                         child: Transform.rotate(
-                          angle: 4.712, //90Deg = 1.571, 180Deg = 3.142, 270Deg = 4.712,
+                          angle: 1.571, //90Deg = 1.571, 180Deg = 3.142, 270Deg = 4.712,
                           child: Lottie.asset(
-                              'assets/lotties/arrow-lottie.json',
-                              width: 50,
-                              height: 50
+                            'assets/lotties/arrow-lottie.json',
+                            width: 50,
+                            height: 50
                           ),
                         )
+                      ),
+                    ),
+                    Visibility(
+                      visible: sv203Stat && powerStat && p201Stat && tankFilled,
+                      child: Positioned(
+                        left: 375,
+                        top: 155,
+                        child: Transform.rotate(
+                          angle: 1.571, //90Deg = 1.571, 180Deg = 3.142, 270Deg = 4.712,
+                          child: Lottie.asset(
+                            'assets/lotties/arrow-lottie.json',
+                            width: 50,
+                            height: 50
+                          ),
+                        )
+                      ),
+                    ),
+                    Visibility(
+                      visible: sv203Stat && powerStat && p201Stat && tankFilled,
+                      child: Positioned(
+                          left: 450,
+                          top: 230,
+                          child: Transform.rotate(
+                            angle: 3.142, //90Deg = 1.571, 180Deg = 3.142, 270Deg = 4.712,
+                            child: Lottie.asset(
+                                'assets/lotties/arrow-lottie.json',
+                                width: 50,
+                                height: 50
+                            ),
+                          )
+                      ),
+                    ),
+                    Visibility(
+                      visible: powerStat && p201Stat && tankFilled,
+                      child: Positioned(
+                          left: 400,
+                          top: 325,
+                          child: Transform.rotate(
+                            angle: 3.142, //90Deg = 1.571, 180Deg = 3.142, 270Deg = 4.712,
+                            child: Lottie.asset(
+                                'assets/lotties/arrow-lottie.json',
+                                width: 50,
+                                height: 50
+                            ),
+                          )
+                      ),
+                    ),
+                    Visibility(
+                      visible: tankFilled,
+                      child: Positioned(
+                          left: 300,
+                          top: 400,
+                          child: Transform.rotate(
+                            angle: 4.712, //90Deg = 1.571, 180Deg = 3.142, 270Deg = 4.712,
+                            child: Lottie.asset(
+                                'assets/lotties/arrow-lottie.json',
+                                width: 50,
+                                height: 50
+                            ),
+                          )
+                      ),
                     ),
                   ]
                 ),
@@ -247,7 +384,9 @@ class _HomePageState extends State<HomePage> {
                               children: [
                                 ElevatedButton(
                                     onPressed: (){
-
+                                      setState(() {
+                                        powerStat = !powerStat;
+                                      });
                                     },
                                     style: ButtonStyle(
                                       shape: MaterialStateProperty.all<RoundedRectangleBorder>(
@@ -255,16 +394,21 @@ class _HomePageState extends State<HomePage> {
                                           borderRadius: BorderRadius.circular(4.0),
                                         ),
                                       ),
+                                      backgroundColor: MaterialStateProperty.all<Color>(
+                                          powerStat ? Colors.green : Colors.red
+                                      ),
                                       minimumSize: MaterialStateProperty.all<Size>(
                                           const Size(100, 48)
                                       ),
                                     ),
-                                    child: const Text('Start')
+                                    child: const Text('Power On')
                                 ),
                                 const SizedBox(width: 12,),
                                 ElevatedButton(
                                     onPressed: (){
-
+                                      setState(() {
+                                        p201Stat = !p201Stat;
+                                      });
                                     },
                                     style: ButtonStyle(
                                       shape: MaterialStateProperty.all<RoundedRectangleBorder>(
@@ -272,20 +416,38 @@ class _HomePageState extends State<HomePage> {
                                           borderRadius: BorderRadius.circular(4.0),
                                         ),
                                       ),
+                                      backgroundColor: MaterialStateProperty.all<Color>(
+                                          p201Stat ? Colors.green : Colors.red
+                                      ),
                                       minimumSize: MaterialStateProperty.all<Size>(
                                           const Size(100, 48)
                                       ),
                                     ),
-                                    child: const Text('Stop')
+                                    child: const Text('P-201')
+                                ),
+                                const SizedBox(width: 12,),
+                                ElevatedButton(
+                                    onPressed: (){
+                                      setState(() {
+                                        sv203Stat = !sv203Stat;
+                                      });
+                                    },
+                                    style: ButtonStyle(
+                                      shape: MaterialStateProperty.all<RoundedRectangleBorder>(
+                                        RoundedRectangleBorder(
+                                          borderRadius: BorderRadius.circular(4.0),
+                                        ),
+                                      ),
+                                      backgroundColor: MaterialStateProperty.all<Color>(
+                                          sv203Stat ? Colors.green : Colors.red
+                                      ),
+                                      minimumSize: MaterialStateProperty.all<Size>(
+                                          const Size(100, 48)
+                                      ),
+                                    ),
+                                    child: const Text('SV-203')
                                 ),
                               ],
-                            ),
-                            const SizedBox(height: 28,),
-                            const Text(
-                              'PID Control',
-                              style: TextStyle(
-                                  fontSize: 20
-                              ),
                             ),
                             const SizedBox(height: 12,),
                             Row(
@@ -295,8 +457,9 @@ class _HomePageState extends State<HomePage> {
                               children: [
                                 ElevatedButton(
                                     onPressed: (){
-                                      showDialog(context: context, builder: (context){
-                                        return const PIDDialog();
+                                      setState(() {
+                                        shouldAnimateTank = !shouldAnimateTank;
+                                        tankFilled = true;
                                       });
                                     },
                                     style: ButtonStyle(
@@ -305,14 +468,55 @@ class _HomePageState extends State<HomePage> {
                                           borderRadius: BorderRadius.circular(4.0),
                                         ),
                                       ),
+                                      backgroundColor: MaterialStateProperty.all<Color>(
+                                          shouldAnimateTank ? Colors.green : Colors.red
+                                      ),
                                       minimumSize: MaterialStateProperty.all<Size>(
                                           const Size(100, 48)
                                       ),
                                     ),
-                                    child: const Text('PID Tuner')
+                                    child: const Text('Fill Up Tank')
+                                ),
+                                const SizedBox(width: 12,),
+                                ElevatedButton(
+                                    onPressed: (){
+                                      setState(() {
+                                        shouldReverseTank = !shouldReverseTank;
+                                        if(shouldAnimateTank == false){
+                                          tankFilled = false;
+                                        }
+                                      });
+                                    },
+                                    style: ButtonStyle(
+                                      shape: MaterialStateProperty.all<RoundedRectangleBorder>(
+                                        RoundedRectangleBorder(
+                                          borderRadius: BorderRadius.circular(4.0),
+                                        ),
+                                      ),
+                                      backgroundColor: MaterialStateProperty.all<Color>(
+                                          shouldReverseTank ? Colors.green : Colors.red
+                                      ),
+                                      minimumSize: MaterialStateProperty.all<Size>(
+                                          const Size(100, 48)
+                                      ),
+                                    ),
+                                    child: const Text('Drain Out Water')
                                 ),
                               ],
                             ),
+                            const SizedBox(height: 28,),
+                            const Text(
+                              'Equipment Status',
+                              style: TextStyle(
+                                  fontSize: 20
+                              ),
+                            ),
+                            const SizedBox(height: 12,),
+                            Text('Process Variable: $pvValue'), //${cosPoints.last.x.toStringAsFixed(2)}
+                            const SizedBox(height: 4,),
+                            Text('Manipulated Variable: $mvValue'), //${sinPoints.last.x.toStringAsFixed(2)}
+                            const SizedBox(height: 4,),
+                            Text('Setpoint Variable: ${svValue.toStringAsFixed(2)}'),
                           ],
                         ),
                       )
@@ -342,7 +546,7 @@ class _HomePageState extends State<HomePage> {
                         mainAxisSize: MainAxisSize.max,
                         children: [
                           const Text(
-                            'FACEPLATE SE270-2',
+                            'MODELLING SE270-2',
                             style: TextStyle(
                               fontSize: 24
                             ),
@@ -356,8 +560,8 @@ class _HomePageState extends State<HomePage> {
                             mainAxisSize: MainAxisSize.max,
                             children: [
                               ElevatedButton(
-                                  onPressed: (){
-
+                                  onPressed: ()async{
+                                    await APIServices().startMatlab();
                                   },
                                   style: ButtonStyle(
                                     shape: MaterialStateProperty.all<RoundedRectangleBorder>(
@@ -373,8 +577,8 @@ class _HomePageState extends State<HomePage> {
                               ),
                               const SizedBox(width: 12,),
                               ElevatedButton(
-                                  onPressed: (){
-
+                                  onPressed: ()async{
+                                    await APIServices().stopMatlab();
                                   },
                                   style: ButtonStyle(
                                     shape: MaterialStateProperty.all<RoundedRectangleBorder>(
@@ -462,77 +666,48 @@ class _HomePageState extends State<HomePage> {
                     //const SizedBox(height: 24,),
                     cosPoints.isNotEmpty ? AspectRatio(
                       aspectRatio: 3.5,
-                      child: Padding(
-                        padding: const EdgeInsets.all(24.0),
-                        child: LineChart(
-                          LineChartData(
-                            minY: -1,
-                            maxY: 1,
-                            minX: 0,//sinPoints.first.x,
-                            maxX: 100,//sinPoints.last.x,
-                            /*lineTouchData: const LineTouchData(
-                                enabled: true
-                            ),*/
-                            clipData: const FlClipData.all(),
-                            gridData: const FlGridData(
-                              show: true,
-                              drawVerticalLine: true,
+                      child: LineChart(
+                        LineChartData(
+                          minY: -2,
+                          maxY: 2,
+                          minX: 0,//sinPoints.first.x,
+                          maxX: 50,//sinPoints.last.x,
+                          lineTouchData: const LineTouchData(
+                              enabled: true
+                          ),
+                          clipData: const FlClipData.all(),
+                          gridData: const FlGridData(
+                            show: true,
+                            drawVerticalLine: true,
+                          ),
+                          borderData: FlBorderData(show: true),
+                          lineBarsData: [
+                            sinLine(sinPoints),
+                            cosLine(cosPoints),
+                          ],
+                          titlesData: const FlTitlesData(
+                            topTitles: AxisTitles(
+                              sideTitles: SideTitles(showTitles: false)
                             ),
-                            borderData: FlBorderData(show: false),
-                            lineBarsData: [
-                              sinLine(sinPoints),
-                              cosLine(cosPoints),
-                            ],
-                            titlesData: const FlTitlesData(
-                              topTitles: AxisTitles(
-                                sideTitles: SideTitles(showTitles: false)
-                              ),
-                              rightTitles: AxisTitles(
-                                sideTitles: SideTitles(showTitles: false)
-                              ),
-                              bottomTitles: AxisTitles(
-                                sideTitles: SideTitles(
-                                    showTitles: true
-                                )
-                              ),
-                              leftTitles: AxisTitles(
-                                sideTitles: SideTitles(
-                                    showTitles: true
-                                )
-                              ),
+                            rightTitles: AxisTitles(
+                              sideTitles: SideTitles(showTitles: false)
+                            ),
+                            bottomTitles: AxisTitles(
+                              sideTitles: SideTitles(
+                                showTitles: true,
+                                reservedSize: 30
+                              )
+                            ),
+                            leftTitles: AxisTitles(
+                              sideTitles: SideTitles(
+                                  showTitles: true,
+                                  reservedSize: 40
+                              )
                             ),
                           ),
                         ),
                       ),
                     ): Container(),
-                    /*LineChart(
-                      LineChartData(
-                        minX: 150,
-                        minY: 100,
-                        lineBarsData: [
-                          LineChartBarData(
-                            color: Colors.blue,
-                            isCurved: true,
-                          )
-                        ],
-                        titlesData: const FlTitlesData(
-                          topTitles: AxisTitles(
-                            sideTitles: SideTitles(showTitles: false)
-                          ),
-                          rightTitles: AxisTitles(
-                              sideTitles: SideTitles(showTitles: false)
-                          ),
-                          leftTitles: AxisTitles(
-                            axisNameWidget: Text('Water Level Percentage (%)'),
-                            sideTitles: SideTitles(showTitles: true)
-                          ),
-                          bottomTitles: AxisTitles(
-                            axisNameWidget: Text('Time (seconds)'),
-                              sideTitles: SideTitles(showTitles: true)
-                          ),
-                        )
-                      )
-                    )*/
                   ],
                 ),
               ),
@@ -549,13 +724,14 @@ class _HomePageState extends State<HomePage> {
       dotData: const FlDotData(
         show: false,
       ),
-      gradient: const LinearGradient(
+      color: Colors.green,
+      /*gradient: const LinearGradient(
         //colors: [widget.sinColor.withOpacity(0), widget.sinColor],
-        colors: [Colors.blue,Colors.green],
+        colors: [Colors.green],
         stops: [0.1, 1.0],
-      ),
-      barWidth: 4,
-      isCurved: false,
+      ),*/
+      barWidth: 2,
+      isCurved: true,
     );
   }
 
@@ -565,12 +741,13 @@ class _HomePageState extends State<HomePage> {
       dotData: const FlDotData(
         show: false,
       ),
-      gradient: const LinearGradient(
-        colors: [Colors.yellow, Colors.red],//[widget.cosColor.withOpacity(0), widget.cosColor],
+      color: Colors.blue,
+      /*gradient: const LinearGradient(
+        colors: [Colors.blue],//[widget.cosColor.withOpacity(0), widget.cosColor],
         stops: [0.1, 1.0],
-      ),
-      barWidth: 4,
-      isCurved: false,
+      ),*/
+      barWidth: 2,
+      isCurved: true,
     );
   }
 
