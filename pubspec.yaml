@@ -68,6 +68,10 @@ flutter:
   assets:
     - assets/images/P&ID-SE2702.png
     - assets/images/SOLLOGO.png
+    - assets/images/HE104.jpg
+    - assets/images/SE270-2.jpg
+    - assets/images/HE104.png
+    - assets/images/SE270-2.png
     - assets/lotties/
 
   # An image asset can refer to one or more resolution-specific "variants", see

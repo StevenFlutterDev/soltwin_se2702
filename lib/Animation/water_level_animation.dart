@@ -5,7 +5,7 @@ class WaterLevelAnimation extends StatefulWidget {
   final double width;
   final bool shouldAnimate;
   final bool shouldReverse;
-  const WaterLevelAnimation({super.key, required this.height, required this.width, required this.shouldAnimate, required this.shouldReverse});
+  const WaterLevelAnimation({Key? key, required this.height, required this.width, required this.shouldAnimate, required this.shouldReverse}) : super(key:key);
 
   @override
   WaterLevelAnimationState createState() => WaterLevelAnimationState();
