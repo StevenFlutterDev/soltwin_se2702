@@ -56,10 +56,35 @@ class MyApp extends StatelessWidget {
   Widget build(BuildContext context) {
     return MaterialApp.router(
       title: 'SOLTWIN SE270-2',
-      theme: ThemeData.dark().copyWith(
-        //primaryColor: Colors.black,
-        colorScheme: ColorScheme.fromSeed(seedColor: Colors.deepPurple),
+      theme: ThemeData(
+        // Define light theme settings (used if you switch to light theme manually)
+        brightness: Brightness.light,
+        primarySwatch: Colors.blue,
+        // other light theme configurations
       ),
+      darkTheme: ThemeData(
+        // Define dark theme settings
+        brightness: Brightness.dark,
+        primaryColor: Colors.grey[900],
+        cardColor: const Color(0xFF1E1E1E),
+        textTheme: const TextTheme(
+          bodyLarge: TextStyle(
+            color: Color(0xFFE0E0E0),
+            fontSize: 16
+          ),
+          bodyMedium: TextStyle(
+            color: Color(0xFFFFFFFF),
+            fontSize: 16,
+          ),
+          bodySmall: TextStyle(color: Color(0xFFFFFFFF)),
+          // other text style configurations
+        ),
+        buttonTheme: ButtonThemeData(
+          buttonColor: Colors.blueGrey[700], // Deep blue color for buttons
+        ),
+        // other dark theme configurations
+      ),
+      themeMode: ThemeMode.dark, // Force dark theme
       routerConfig: _routers,
       debugShowCheckedModeBanner: false,
     );

@@ -2,6 +2,7 @@
 
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
+import 'package:soltwin_se2702/CustomWidget/custom_app_bar.dart';
 
 
 class HomePage extends StatefulWidget {
@@ -18,43 +19,150 @@ class _HomePageState extends State<HomePage> {
     final currentWidth = MediaQuery.of(context).size.width;
     final currentHeight = MediaQuery.of(context).size.height;
     return Scaffold(
+      appBar: const CustomAppBar(),
       body: SingleChildScrollView(
         child: Padding(
-          padding: const EdgeInsets.all(20.0),
+          padding: const EdgeInsets.only(top: 48.0),
           child: Column(
             children: [
               Row(
                 mainAxisAlignment: MainAxisAlignment.spaceEvenly,
                 children: [
-                  InkWell(
-                    onTap: () => context.go('/se2702'),
-                    child: Ink(
+                  Card(
+                    elevation: 20,
+                    child: InkWell(
+                      onTap: () => context.go('/se2702'),
+                      borderRadius: const BorderRadius.all(Radius.circular(20)),
                       child: SizedBox(
                         width: currentWidth / 5,
                         height: currentHeight / 3,
-                        child: Card(
-                          //surfaceTintColor: Colors.white,
-                          elevation: 20,
-                          child: Padding(
-                            padding: const EdgeInsets.all(20),
-                            child: Image.asset('assets/images/se270-2.png'),
+                        child: Column(
+                          children: [
+                            Expanded(
+                              child: Padding(
+                                padding: const EdgeInsets.all(12),
+                                child: Image.asset('assets/images/SE270-2.png'),
+                              ),
+                            ),
+                            const Text('SE270-2', style: TextStyle(fontSize: 20)),
+                            const SizedBox(height: 8.0,)
+                          ],
+                        ),
+                      ),
+                    ),
+                  ),
+                  Card(
+                    elevation: 20,
+                    child: InkWell(
+                      onTap: () => context.go('/he104'),
+                      borderRadius: const BorderRadius.all(Radius.circular(20)),
+                      child: SizedBox(
+                        width: currentWidth / 5,
+                        height: currentHeight / 3,
+                        child: Column(
+                          children: [
+                            Expanded(
+                              child: Padding(
+                                padding: const EdgeInsets.all(12),
+                                child: Image.asset('assets/images/HE104.png'),
+                              ),
+                            ),
+                            const Text('HE104', style: TextStyle(fontSize: 20)),
+                            const SizedBox(height: 8.0,)
+                          ],
+                        ),
+                      ),
+                    ),
+                  ),
+                  Card(
+                    elevation: 20,
+                    child: InkWell(
+                      onTap: () => {},
+                      borderRadius: const BorderRadius.all(Radius.circular(20)),
+                      child: Container(
+                        width: currentWidth / 5,
+                        height: currentHeight / 3,
+                        alignment: Alignment.center,
+                        child: Transform.rotate(
+                          angle: -45 * (3.141592653589793 / 180),
+                          child: const Text(
+                            'Coming Soon',
+                            style: TextStyle(
+                                fontSize: 30,
+                                color: Colors.white24
+                            ),
                           ),
                         ),
                       ),
                     ),
                   ),
-                  InkWell(
-                    onTap: () => context.go('/he104'),
-                    child: Ink(
-                      child: SizedBox(
+                ],
+              ),
+              const SizedBox(height: 20,),
+              Row(
+                mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+                children: [
+                  Card(
+                    elevation: 20,
+                    child: InkWell(
+                      onTap: () => {},
+                      borderRadius: const BorderRadius.all(Radius.circular(20)),
+                      child: Container(
                         width: currentWidth / 5,
                         height: currentHeight / 3,
-                        child: Card(
-                          //surfaceTintColor: Colors.white,
-                          elevation: 20,
-                          child: Padding(
-                            padding: const EdgeInsets.all(20),
-                            child: Image.asset('assets/images/HE104.png'),
+                        alignment: Alignment.center,
+                        child: Transform.rotate(
+                          angle: -45 * (3.141592653589793 / 180),
+                          child: const Text(
+                            'Coming Soon',
+                            style: TextStyle(
+                              fontSize: 30,
+                              color: Colors.white24
+                            ),
+                          ),
+                        ),
+                      ),
+                    ),
+                  ),
+                  Card(
+                    elevation: 20,
+                    child: InkWell(
+                      onTap: () => {},
+                      borderRadius: const BorderRadius.all(Radius.circular(20)),
+                      child: Container(
+                        width: currentWidth / 5,
+                        height: currentHeight / 3,
+                        alignment: Alignment.center,
+                        child: Transform.rotate(
+                          angle: -45 * (3.141592653589793 / 180),
+                          child: const Text(
+                            'Coming Soon',
+                            style: TextStyle(
+                              fontSize: 30,
+                              color: Colors.white24
+                            ),
+                          ),
+                        ),
+                      ),
+                    ),
+                  ),
+                  Card(
+                    elevation: 20,
+                    child: InkWell(
+                      onTap: () => {},
+                      borderRadius: const BorderRadius.all(Radius.circular(20)),
+                      child: Container(
+                        width: currentWidth / 5,
+                        height: currentHeight / 3,
+                        alignment: Alignment.center,
+                        child: Transform.rotate(
+                          angle: -45 * (3.141592653589793 / 180),
+                          child: const Text(
+                            'Coming Soon',
+                            style: TextStyle(
+                              fontSize: 30,
+                              color: Colors.white24
+                            ),
                           ),
                         ),
                       ),

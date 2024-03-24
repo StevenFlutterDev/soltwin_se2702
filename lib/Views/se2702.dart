@@ -6,7 +6,7 @@ import 'dart:convert';
 import 'package:flutter/material.dart';
 import 'package:fl_chart/fl_chart.dart';
 import 'package:soltwin_se2702/Animation/water_level_animation.dart';
-import 'package:soltwin_se2702/Dialogs/pid_dialog.dart';
+import 'package:soltwin_se2702/CustomWidget/custom_app_bar.dart';
 import 'package:soltwin_se2702/Services/rest_api.dart';
 import 'package:soltwin_se2702/Services/socketio.dart';
 import 'package:soltwin_se2702/Services/websocket.dart';
@@ -26,7 +26,7 @@ class _SE2702State extends State<SE2702> {
 
   //TCP
   Socket? _tcpSocket;
-  late Timer _dataTimer;
+  //late Timer _dataTimer;
 
   //Animation State
   bool p201Stat = false;
@@ -129,36 +129,10 @@ class _SE2702State extends State<SE2702> {
 
   @override
   Widget build(BuildContext context){
-    final currentWidth = MediaQuery.of(context).size.width;
+    //final currentWidth = MediaQuery.of(context).size.width;
     //final currentHeight = MediaQuery.of(context).size.height;
     return Scaffold(
-      appBar: AppBar(
-        backgroundColor: Colors.indigo[900],
-        leading: Image.asset(
-          'assets/images/SOLLOGO.png',
-          fit: BoxFit.fitWidth,
-        ),
-        title: const Text(
-          'SOLTWIN',
-          style: TextStyle(
-            fontSize: 24,
-            color: Colors.white,
-            letterSpacing: 1.2,
-          ),
-        ),
-        centerTitle: true,
-        actions: [
-          TextButton(
-              onPressed: (){},
-              child: const Text(
-                'Login',
-                style: TextStyle(
-                    letterSpacing: 1.2,
-                    color: Colors.white
-                ),
-              ))
-        ],
-      ),
+      appBar: const CustomAppBar(),
       body: SingleChildScrollView(
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
@@ -175,7 +149,7 @@ class _SE2702State extends State<SE2702> {
                       ),
                       //LED P-201
                       Positioned(
-                        right: 35,
+                        right: 15,
                         top: 40,
                         child: Row(
                           children: [
@@ -187,7 +161,7 @@ class _SE2702State extends State<SE2702> {
                                 shape: BoxShape.circle,
                                 boxShadow: [
                                   BoxShadow(
-                                    color: powerStat ? Colors.green[200]! : Colors.black,
+                                    color: powerStat ? Colors.green[200]! : Colors.transparent,
                                     blurRadius: 10.0,
                                     spreadRadius: 5.0,
                                   ),
@@ -213,7 +187,7 @@ class _SE2702State extends State<SE2702> {
                                 shape: BoxShape.circle,
                                 boxShadow: [
                                   BoxShadow(
-                                    color: powerStat & p201Stat ? Colors.green[200]! : Colors.black,
+                                    color: powerStat & p201Stat ? Colors.green[200]! : Colors.transparent,
                                     blurRadius: 10.0,
                                     spreadRadius: 5.0,
                                   ),
@@ -239,7 +213,7 @@ class _SE2702State extends State<SE2702> {
                                 shape: BoxShape.circle,
                                 boxShadow: [
                                   BoxShadow(
-                                    color: powerStat & sv203Stat ? Colors.green[200]! : Colors.black,
+                                    color: powerStat & sv203Stat ? Colors.green[200]! : Colors.transparent,
                                     blurRadius: 10.0,
                                     spreadRadius: 5.0,
                                   ),
@@ -395,203 +369,178 @@ class _SE2702State extends State<SE2702> {
                 ),
                 Padding(
                   padding: const EdgeInsets.all(20.0),
-                  child: Container(
-                    //width: currentWidth * 50/100,
-                    //height: currentHeight * 30/100,
-                      decoration: BoxDecoration(
-                        borderRadius: BorderRadius.circular(12),
-                        color: Colors.blueGrey[500],
-                        boxShadow: [
-                          BoxShadow(
-                              color: Colors.black.withOpacity(0.4),
-                              offset: const Offset(-10, 15),
-                              blurRadius: 10,
-                              spreadRadius: 3)
+                  child: Card(
+                    elevation: 20,
+                    child: Padding(
+                      padding: const EdgeInsets.all(20.0),
+                      child: Column(
+                        mainAxisAlignment: MainAxisAlignment.start,
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        mainAxisSize: MainAxisSize.max,
+                        children: [
+                          const Text(
+                            'EQUIPMENT CONTROL',
+                            style: TextStyle(
+                                fontSize: 24
+                            ),
+                          ),
+                          const Divider(
+                            height: 24,
+                          ),
+                          Row(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            mainAxisAlignment: MainAxisAlignment.start,
+                            mainAxisSize: MainAxisSize.max,
+                            children: [
+                              ElevatedButton(
+                                  onPressed: (){
+                                    setState(() {
+                                      powerStat = !powerStat;
+                                    });
+                                  },
+                                  style: ButtonStyle(
+                                    shape: MaterialStateProperty.all<RoundedRectangleBorder>(
+                                      RoundedRectangleBorder(
+                                        borderRadius: BorderRadius.circular(4.0),
+                                      ),
+                                    ),
+                                    backgroundColor: MaterialStateProperty.all<Color>(
+                                        powerStat ? Colors.green : Colors.red
+                                    ),
+                                    minimumSize: MaterialStateProperty.all<Size>(
+                                        const Size(100, 48)
+                                    ),
+                                  ),
+                                  child: const Text('Power On')
+                              ),
+                              const SizedBox(width: 12,),
+                              ElevatedButton(
+                                  onPressed: (){
+                                    setState(() {
+                                      p201Stat = !p201Stat;
+                                    });
+                                  },
+                                  style: ButtonStyle(
+                                    shape: MaterialStateProperty.all<RoundedRectangleBorder>(
+                                      RoundedRectangleBorder(
+                                        borderRadius: BorderRadius.circular(4.0),
+                                      ),
+                                    ),
+                                    backgroundColor: MaterialStateProperty.all<Color>(
+                                        p201Stat ? Colors.green : Colors.red
+                                    ),
+                                    minimumSize: MaterialStateProperty.all<Size>(
+                                        const Size(100, 48)
+                                    ),
+                                  ),
+                                  child: const Text('P-201')
+                              ),
+                              const SizedBox(width: 12,),
+                              ElevatedButton(
+                                  onPressed: (){
+                                    setState(() {
+                                      sv203Stat = !sv203Stat;
+                                    });
+                                  },
+                                  style: ButtonStyle(
+                                    shape: MaterialStateProperty.all<RoundedRectangleBorder>(
+                                      RoundedRectangleBorder(
+                                        borderRadius: BorderRadius.circular(4.0),
+                                      ),
+                                    ),
+                                    backgroundColor: MaterialStateProperty.all<Color>(
+                                        sv203Stat ? Colors.green : Colors.red
+                                    ),
+                                    minimumSize: MaterialStateProperty.all<Size>(
+                                        const Size(100, 48)
+                                    ),
+                                  ),
+                                  child: const Text('SV-203')
+                              ),
+                            ],
+                          ),
+                          const SizedBox(height: 12,),
+                          Row(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            mainAxisAlignment: MainAxisAlignment.start,
+                            mainAxisSize: MainAxisSize.max,
+                            children: [
+                              ElevatedButton(
+                                  onPressed: (){
+                                    setState(() {
+                                      shouldAnimateTank = !shouldAnimateTank;
+                                      tankFilled = true;
+                                    });
+                                  },
+                                  style: ButtonStyle(
+                                    shape: MaterialStateProperty.all<RoundedRectangleBorder>(
+                                      RoundedRectangleBorder(
+                                        borderRadius: BorderRadius.circular(4.0),
+                                      ),
+                                    ),
+                                    backgroundColor: MaterialStateProperty.all<Color>(
+                                        shouldAnimateTank ? Colors.green : Colors.red
+                                    ),
+                                    minimumSize: MaterialStateProperty.all<Size>(
+                                        const Size(100, 48)
+                                    ),
+                                  ),
+                                  child: const Text('Fill Up Tank')
+                              ),
+                              const SizedBox(width: 12,),
+                              ElevatedButton(
+                                  onPressed: (){
+                                    setState(() {
+                                      shouldReverseTank = !shouldReverseTank;
+                                      if(shouldAnimateTank == false){
+                                        tankFilled = false;
+                                      }
+                                    });
+                                  },
+                                  style: ButtonStyle(
+                                    shape: MaterialStateProperty.all<RoundedRectangleBorder>(
+                                      RoundedRectangleBorder(
+                                        borderRadius: BorderRadius.circular(4.0),
+                                      ),
+                                    ),
+                                    backgroundColor: MaterialStateProperty.all<Color>(
+                                        shouldReverseTank ? Colors.green : Colors.red
+                                    ),
+                                    minimumSize: MaterialStateProperty.all<Size>(
+                                        const Size(100, 48)
+                                    ),
+                                  ),
+                                  child: const Text('Drain Out Water')
+                              ),
+                            ],
+                          ),
+                          const SizedBox(height: 28,),
+                          const Text(
+                            'Equipment Status',
+                            style: TextStyle(
+                                fontSize: 20
+                            ),
+                          ),
+                          const SizedBox(height: 12,),
+                          Text('Process Variable: $pvValue'), //${cosPoints.last.x.toStringAsFixed(2)}
+                          const SizedBox(height: 4,),
+                          Text('Manipulated Variable: $mvValue'), //${sinPoints.last.x.toStringAsFixed(2)}
+                          const SizedBox(height: 4,),
+                          Text('Setpoint Variable: ${svValue.toStringAsFixed(2)}'),
                         ],
                       ),
-                      child: Padding(
-                        padding: const EdgeInsets.all(20.0),
-                        child: Column(
-                          mainAxisAlignment: MainAxisAlignment.start,
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          mainAxisSize: MainAxisSize.max,
-                          children: [
-                            const Text(
-                              'EQUIPMENT CONTROL',
-                              style: TextStyle(
-                                  fontSize: 24
-                              ),
-                            ),
-                            const Divider(
-                              height: 24,
-                            ),
-                            Row(
-                              crossAxisAlignment: CrossAxisAlignment.start,
-                              mainAxisAlignment: MainAxisAlignment.start,
-                              mainAxisSize: MainAxisSize.max,
-                              children: [
-                                ElevatedButton(
-                                    onPressed: (){
-                                      setState(() {
-                                        powerStat = !powerStat;
-                                      });
-                                    },
-                                    style: ButtonStyle(
-                                      shape: MaterialStateProperty.all<RoundedRectangleBorder>(
-                                        RoundedRectangleBorder(
-                                          borderRadius: BorderRadius.circular(4.0),
-                                        ),
-                                      ),
-                                      backgroundColor: MaterialStateProperty.all<Color>(
-                                          powerStat ? Colors.green : Colors.red
-                                      ),
-                                      minimumSize: MaterialStateProperty.all<Size>(
-                                          const Size(100, 48)
-                                      ),
-                                    ),
-                                    child: const Text('Power On')
-                                ),
-                                const SizedBox(width: 12,),
-                                ElevatedButton(
-                                    onPressed: (){
-                                      setState(() {
-                                        p201Stat = !p201Stat;
-                                      });
-                                    },
-                                    style: ButtonStyle(
-                                      shape: MaterialStateProperty.all<RoundedRectangleBorder>(
-                                        RoundedRectangleBorder(
-                                          borderRadius: BorderRadius.circular(4.0),
-                                        ),
-                                      ),
-                                      backgroundColor: MaterialStateProperty.all<Color>(
-                                          p201Stat ? Colors.green : Colors.red
-                                      ),
-                                      minimumSize: MaterialStateProperty.all<Size>(
-                                          const Size(100, 48)
-                                      ),
-                                    ),
-                                    child: const Text('P-201')
-                                ),
-                                const SizedBox(width: 12,),
-                                ElevatedButton(
-                                    onPressed: (){
-                                      setState(() {
-                                        sv203Stat = !sv203Stat;
-                                      });
-                                    },
-                                    style: ButtonStyle(
-                                      shape: MaterialStateProperty.all<RoundedRectangleBorder>(
-                                        RoundedRectangleBorder(
-                                          borderRadius: BorderRadius.circular(4.0),
-                                        ),
-                                      ),
-                                      backgroundColor: MaterialStateProperty.all<Color>(
-                                          sv203Stat ? Colors.green : Colors.red
-                                      ),
-                                      minimumSize: MaterialStateProperty.all<Size>(
-                                          const Size(100, 48)
-                                      ),
-                                    ),
-                                    child: const Text('SV-203')
-                                ),
-                              ],
-                            ),
-                            const SizedBox(height: 12,),
-                            Row(
-                              crossAxisAlignment: CrossAxisAlignment.start,
-                              mainAxisAlignment: MainAxisAlignment.start,
-                              mainAxisSize: MainAxisSize.max,
-                              children: [
-                                ElevatedButton(
-                                    onPressed: (){
-                                      setState(() {
-                                        shouldAnimateTank = !shouldAnimateTank;
-                                        tankFilled = true;
-                                      });
-                                    },
-                                    style: ButtonStyle(
-                                      shape: MaterialStateProperty.all<RoundedRectangleBorder>(
-                                        RoundedRectangleBorder(
-                                          borderRadius: BorderRadius.circular(4.0),
-                                        ),
-                                      ),
-                                      backgroundColor: MaterialStateProperty.all<Color>(
-                                          shouldAnimateTank ? Colors.green : Colors.red
-                                      ),
-                                      minimumSize: MaterialStateProperty.all<Size>(
-                                          const Size(100, 48)
-                                      ),
-                                    ),
-                                    child: const Text('Fill Up Tank')
-                                ),
-                                const SizedBox(width: 12,),
-                                ElevatedButton(
-                                    onPressed: (){
-                                      setState(() {
-                                        shouldReverseTank = !shouldReverseTank;
-                                        if(shouldAnimateTank == false){
-                                          tankFilled = false;
-                                        }
-                                      });
-                                    },
-                                    style: ButtonStyle(
-                                      shape: MaterialStateProperty.all<RoundedRectangleBorder>(
-                                        RoundedRectangleBorder(
-                                          borderRadius: BorderRadius.circular(4.0),
-                                        ),
-                                      ),
-                                      backgroundColor: MaterialStateProperty.all<Color>(
-                                          shouldReverseTank ? Colors.green : Colors.red
-                                      ),
-                                      minimumSize: MaterialStateProperty.all<Size>(
-                                          const Size(100, 48)
-                                      ),
-                                    ),
-                                    child: const Text('Drain Out Water')
-                                ),
-                              ],
-                            ),
-                            const SizedBox(height: 28,),
-                            const Text(
-                              'Equipment Status',
-                              style: TextStyle(
-                                  fontSize: 20
-                              ),
-                            ),
-                            const SizedBox(height: 12,),
-                            Text('Process Variable: $pvValue'), //${cosPoints.last.x.toStringAsFixed(2)}
-                            const SizedBox(height: 4,),
-                            Text('Manipulated Variable: $mvValue'), //${sinPoints.last.x.toStringAsFixed(2)}
-                            const SizedBox(height: 4,),
-                            Text('Setpoint Variable: ${svValue.toStringAsFixed(2)}'),
-                          ],
-                        ),
-                      )
+                    )
                   ),
                 ),
                 Padding(
                   padding: const EdgeInsets.all(20.0),
-                  child: Container(
-                    //width: currentWidth * 50/100,
-                    //height: currentHeight * 30/100,
-                      decoration: BoxDecoration(
-                        borderRadius: BorderRadius.circular(12),
-                        color: Colors.blueGrey[500],
-                        boxShadow: [
-                          BoxShadow(
-                              color: Colors.black.withOpacity(0.4),
-                              offset: const Offset(-10, 15),
-                              blurRadius: 10,
-                              spreadRadius: 3)
-                        ],
-                      ),
-                      child: Padding(
+                  child: Card(
+                    elevation: 20,
+                    child: Padding(
                         padding: const EdgeInsets.all(20.0),
                         child: Column(
                           mainAxisAlignment: MainAxisAlignment.start,
                           crossAxisAlignment: CrossAxisAlignment.start,
-                          //mainAxisSize: MainAxisSize.max,
                           children: [
                             const Text(
                               'MODELLING SE270-2',
@@ -650,7 +599,7 @@ class _SE2702State extends State<SE2702> {
                               ),
                             ),
                             const SizedBox(height: 12,),
-                            Row(
+                            /*Row(
                               crossAxisAlignment: CrossAxisAlignment.start,
                               mainAxisAlignment: MainAxisAlignment.start,
                               mainAxisSize: MainAxisSize.max,
@@ -675,7 +624,7 @@ class _SE2702State extends State<SE2702> {
                                 ),
                               ],
                             ),
-                            const SizedBox(height: 12,),
+                            const SizedBox(height: 12,),*/
                             Row(
                               crossAxisAlignment: CrossAxisAlignment.center,
                               mainAxisAlignment: MainAxisAlignment.start,
@@ -695,103 +644,70 @@ class _SE2702State extends State<SE2702> {
                                       decimal: true,
                                     ),
                                     decoration: const InputDecoration(
-                                      border: OutlineInputBorder(
-                                          borderRadius: BorderRadius.all(Radius.circular(18.0)),
-                                          borderSide: BorderSide(
-                                              width: 1,
-                                              style: BorderStyle.solid
-                                          )
-                                      ),
-                                      contentPadding: EdgeInsets.only(top: 14.0, left: 20),
+                                      border: UnderlineInputBorder(),
+                                      contentPadding: EdgeInsets.only(left: 12),
                                       //labelText: '  P Value',
                                     ),
                                   ),
                                 )
                               ],
                             ),
-                            /*Row(
-                            children: [
-                              const Text(
-                                'P Value:',
-                                style: TextStyle(
-                                    color: Colors.black
-                                ),
-                              ),
-                              TextField(
-                                controller: kP,
-                                keyboardType: const TextInputType.numberWithOptions(
-                                  decimal: true,
-                                ),
-                                decoration: const InputDecoration(
-                                  border: OutlineInputBorder(
-                                    borderRadius: BorderRadius.all(Radius.circular(12.0)),
+                            const SizedBox(height: 12,),
+                            Row(
+                              crossAxisAlignment: CrossAxisAlignment.center,
+                              mainAxisAlignment: MainAxisAlignment.start,
+                              mainAxisSize: MainAxisSize.max,
+                              children: [
+                                const Text(
+                                  'I Value: ',
+                                  style: TextStyle(
+                                      color: Colors.white
                                   ),
-                                  contentPadding: EdgeInsets.only(top: 14.0),
-                                  //labelText: '  P Value',
                                 ),
-                              ),
-                            ],
-                          ),*/
-                            /*const SizedBox(height: 12,),
-                          Row(
-                            children: [
-                              const Expanded(
-                                  flex: 1,
-                                  child: Text(
-                                    'I Value:',
-                                    style: TextStyle(
-                                        color: Colors.black
+                                SizedBox(
+                                  width: 100,
+                                  child: TextField(
+                                    controller: kI,
+                                    keyboardType: const TextInputType.numberWithOptions(
+                                      decimal: true,
                                     ),
-                                  )
-                              ),
-                              Expanded(
-                                flex: 2,
-                                child: TextField(
-                                  controller: kI,
-                                  keyboardType: const TextInputType.numberWithOptions(
-                                    decimal: true,
-                                  ),
-                                  decoration: const InputDecoration(
-                                    border: OutlineInputBorder(
-                                      borderRadius: BorderRadius.all(Radius.circular(12.0)),
+                                    decoration: const InputDecoration(
+                                      border: UnderlineInputBorder(),
+                                      contentPadding: EdgeInsets.only(left: 12),
+                                      //labelText: '  P Value',
                                     ),
-                                    contentPadding: EdgeInsets.only(top: 14.0),
-                                    //labelText: '  P Value',
+                                  ),
+                                )
+                              ],
+                            ),
+                            const SizedBox(height: 12,),
+                            Row(
+                              crossAxisAlignment: CrossAxisAlignment.center,
+                              mainAxisAlignment: MainAxisAlignment.start,
+                              mainAxisSize: MainAxisSize.max,
+                              children: [
+                                const Text(
+                                  'D Value: ',
+                                  style: TextStyle(
+                                      color: Colors.white
                                   ),
                                 ),
-                              ),
-                            ],
-                          ),
-                          const SizedBox(height: 12,),
-                          Row(
-                            children: [
-                              const Expanded(
-                                  flex: 1,
-                                  child: Text(
-                                    'D Value:',
-                                    style: TextStyle(
-                                        color: Colors.black
+                                SizedBox(
+                                  width: 100,
+                                  child: TextField(
+                                    controller: kD,
+                                    keyboardType: const TextInputType.numberWithOptions(
+                                      decimal: true,
                                     ),
-                                  )
-                              ),
-                              Expanded(
-                                flex: 2,
-                                child: TextField(
-                                  controller: kD,
-                                  keyboardType: const TextInputType.numberWithOptions(
-                                    decimal: true,
-                                  ),
-                                  decoration: const InputDecoration(
-                                    border: OutlineInputBorder(
-                                      borderRadius: BorderRadius.all(Radius.circular(12.0)),
+                                    decoration: const InputDecoration(
+                                      border: UnderlineInputBorder(),
+                                      contentPadding: EdgeInsets.only(left: 12),
+                                      //labelText: '  P Value',
                                     ),
-                                    contentPadding: EdgeInsets.only(top: 14.0),
-                                    //labelText: '  P Value',
                                   ),
-                                ),
-                              ),
-                            ],
-                          ),*/
+                                )
+                              ],
+                            ),
                           ],
                         ),
                       )
@@ -801,21 +717,8 @@ class _SE2702State extends State<SE2702> {
             ),
             Padding(
               padding: const EdgeInsets.all(20),
-              child: Container(
-                width: currentWidth,
-                //height: currentHeight * 50/100,
-                decoration: BoxDecoration(
-                  borderRadius: BorderRadius.circular(20),
-                  color: Colors.blueGrey[900],
-                  boxShadow: [
-                    BoxShadow(
-                        color: Colors.black.withOpacity(0.4),
-                        offset: const Offset(-10, 15),
-                        blurRadius: 10,
-                        spreadRadius: 3
-                    )
-                  ],
-                ),
+              child: Card(
+                elevation: 20,
                 child: Column(
                   mainAxisAlignment: MainAxisAlignment.start,
                   children: [
