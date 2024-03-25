@@ -20,23 +20,24 @@ class SE2702 extends StatefulWidget {
 }
 
 class _SE2702State extends State<SE2702> {
-  //Web socket
+  //Web socket Service
   WebSocketServices? webSocketServices;
   SocketIOManager? socketIOManager;
 
-  //TCP
+  //TCP Service
   Socket? _tcpSocket;
   //late Timer _dataTimer;
+
+  //API Service
+  final APIServices apiServices = APIServices();
 
   //Animation State
   bool p201Stat = false;
   bool sv203Stat = false;
   bool tankFilled = false;
   bool powerStat = false;
-
   bool shouldAnimateTank = false;
   bool shouldAnimateCylinder = false;
-
   bool shouldReverseTank = false;
   bool shouldReverseCylinder = false;
 
@@ -58,6 +59,11 @@ class _SE2702State extends State<SE2702> {
   double step = 0.05;
 
   late Timer timer;
+
+  //Display API status message
+  String statusMessage = '';
+  bool isShowingMessage = false;
+
 
   //functions
 
@@ -558,7 +564,7 @@ class _SE2702State extends State<SE2702> {
                               children: [
                                 ElevatedButton(
                                     onPressed: ()async{
-                                      await APIServices().startMatlab();
+                                      await apiServices.startMatlab();
                                     },
                                     style: ButtonStyle(
                                       shape: MaterialStateProperty.all<RoundedRectangleBorder>(
@@ -575,7 +581,7 @@ class _SE2702State extends State<SE2702> {
                                 const SizedBox(width: 12,),
                                 ElevatedButton(
                                     onPressed: ()async{
-                                      await APIServices().stopMatlab();
+                                      await apiServices.stopMatlab();
                                     },
                                     style: ButtonStyle(
                                       shape: MaterialStateProperty.all<RoundedRectangleBorder>(
@@ -648,6 +654,9 @@ class _SE2702State extends State<SE2702> {
                                       contentPadding: EdgeInsets.only(left: 12),
                                       //labelText: '  P Value',
                                     ),
+                                    onSubmitted: (String value) async {
+                                      await apiServices.setPID('updatePID', 'P', num.parse(value));
+                                    },
                                   ),
                                 )
                               ],

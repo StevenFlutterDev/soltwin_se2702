@@ -49,10 +49,10 @@ class APIServices{
   }
 
   Future<void> setPID(String command, String target, num value) async {
-    //command type
-    //updatePID for setting value P, I and D
-    //changeSetPoint for changing sv
-    //updateConstant for changing mv
+    //command type as below:
+    ////updatePID for setting value P, I and D
+    ////changeSetPoint for changing sv
+    ////updateConstant for changing mv
     http.Response response = await http.post(
         Uri.parse('$_baseURL/command'),
         headers: {
