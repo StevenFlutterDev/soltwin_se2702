@@ -1,3 +1,5 @@
+import 'dart:html' as html;
+
 import 'package:flutter/material.dart';
 
 class WaterLevelAnimation extends StatefulWidget {
@@ -16,12 +18,31 @@ class WaterLevelAnimationState extends State<WaterLevelAnimation>
   AnimationController? _animationController;
   Animation<double>? _animation;
 
+  // Set up the visibility change listener
+
+
   @override
   void initState() {
     super.initState();
     _animationController =
         AnimationController(vsync: this, duration: const Duration(seconds: 5));
     _animation = Tween<double>(begin: 0.0, end: 1.0).animate(_animationController!);
+
+    //Set up the visibility change listener
+    html.document.addEventListener('visibilitychange', (_) {
+      if (html.document.visibilityState == 'visible') {
+        print('Page is visible');
+        // Ensure setState is called to resume animation and rebuild the widget
+        setState(() {
+          // This could be resuming the animation or any other state change you need
+          _animationController?.forward(from: 0.0);
+        });
+      } else {
+        print('Page is hidden');
+        // Optionally, pause the animation here
+        _animationController?.stop();
+      }
+    });
 
     controlAnimation();
   }

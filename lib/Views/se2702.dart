@@ -1,6 +1,4 @@
-import 'dart:math' as math;
-import 'dart:async';
-import 'dart:io';
+
 import 'dart:convert';
 
 import 'package:flutter/material.dart';
@@ -8,7 +6,6 @@ import 'package:fl_chart/fl_chart.dart';
 import 'package:soltwin_se2702/Animation/water_level_animation.dart';
 import 'package:soltwin_se2702/CustomWidget/custom_app_bar.dart';
 import 'package:soltwin_se2702/Services/rest_api.dart';
-import 'package:soltwin_se2702/Services/socketio.dart';
 import 'package:soltwin_se2702/Services/websocket.dart';
 import 'package:lottie/lottie.dart';
 
@@ -22,11 +19,46 @@ class SE2702 extends StatefulWidget {
 class _SE2702State extends State<SE2702> {
   //Web socket Service
   WebSocketServices? webSocketServices;
-  SocketIOManager? socketIOManager;
 
-  //TCP Service
-  Socket? _tcpSocket;
-  //late Timer _dataTimer;
+  void startWSConnections() {
+    webSocketServices = WebSocketServices('ws://192.168.1.102:3001');
+    webSocketServices?.onMessageReceived = (message) {
+      //print('WebSocket message: ${message.toString()}');
+      var jsonData = jsonDecode(message);
+      processWSData(jsonData);
+    };
+  }
+
+  void stopWSConnections() {
+    webSocketServices?.disconnect();
+  }
+
+  void processWSData(var jsonData) {
+    // Extract data from jsonData and use it as needed
+    double time = jsonData['time'];
+    double output = jsonData['output'] * 100 ?? 0;
+    double controlSignal = jsonData['control_signal'] * 100 ?? 0;
+    double setPoint = jsonData['setPoint'] * 100 ?? 0;
+    //String mode = jsonData['mode'];
+
+    setState(() {
+      pvValue = output;
+      mvValue = controlSignal;
+      svValue = setPoint;
+
+      pvPoints.add(FlSpot(time, output));
+      svPoints.add(FlSpot(time, setPoint));
+      /*while (pvPoints.length > limitCount) {
+        pvPoints.removeAt(0);
+        svPoints.removeAt(0);
+        setState(() {
+          pvPoints.add(FlSpot(50, output));
+          svPoints.add(FlSpot(50, setPoint));
+        });
+      }*/
+      // Update your chart or state based on new data
+    });
+  }
 
   //API Service
   final APIServices apiServices = APIServices();
@@ -49,94 +81,35 @@ class _SE2702State extends State<SE2702> {
   final kP = TextEditingController();
   final kI = TextEditingController();
   final kD = TextEditingController();
+  final svTextController = TextEditingController();
+  final mvTextController = TextEditingController();
 
   //fl_chart settings
   final limitCount = 1000;
-  final sinPoints = <FlSpot>[];
-  final cosPoints = <FlSpot>[];
+  var svPoints = <FlSpot>[];
+  var pvPoints = <FlSpot>[];
 
   double xValue = 0;
   double step = 0.05;
-
-  late Timer timer;
 
   //Display API status message
   String statusMessage = '';
   bool isShowingMessage = false;
 
-
-  //functions
-
-  void startWSConnections() {
-    webSocketServices = WebSocketServices('ws://example.com/socket');
-    webSocketServices?.onMessageReceived = (message) {
-      print('WebSocket message: $message');
-      // Update your UI or data model based on WebSocket messages
-    };
-
-    socketIOManager = SocketIOManager('http://example.com');
-    socketIOManager?.onMessageReceived = (message) {
-      print('Socket.IO message: $message');
-      // Update your UI or data model based on Socket.IO messages
-    };
-  }
-
-  void stopWSConnections() {
-    webSocketServices?.disconnect();
-    socketIOManager?.close();
-  }
-
-  void startTcpConnection() async {
-    try {
-      _tcpSocket = await Socket.connect('192.168.1.100', 3000); // Use your server's IP and port
-      _tcpSocket!.listen((List<int> data) {
-        var jsonString = String.fromCharCodes(data).trim();
-        var jsonData = jsonDecode(jsonString);
-        processTcpData(jsonData);
-      });
-    } catch (e) {
-      print('Failed to connect to TCP server: $e');
-    }
-  }
-
-  void processTcpData(dynamic jsonData) {
-    // Assuming jsonData is a Map<String, dynamic>
-    setState(() {
-      pvValue = double.parse(jsonData['pv'] ?? '0');
-      mvValue = double.parse(jsonData['mv'] ?? '0');
-      // Update your chart or state based on new data
-    });
-  }
-
-  void stopTcpConnection() {
-    _tcpSocket?.close();
-  }
-
   @override
   void initState() {
     super.initState();
-    timer = Timer.periodic(const Duration(milliseconds: 50), (timer) {
-      while (sinPoints.length > limitCount) {
-        sinPoints.removeAt(0);
-        cosPoints.removeAt(0);
-        setState(() {
-          timer.cancel();
-        });
-      }
-      setState(() {
-        sinPoints.add(FlSpot(xValue, math.sin(xValue)));
-        cosPoints.add(FlSpot(xValue, math.cos(xValue)));
-      });
-      xValue += step;
+
+    setState(() {
+      pvPoints.add(const FlSpot(0, 0));
+      svPoints.add(const FlSpot(0, 0));
     });
 
-    startTcpConnection();  // Start TCP connection when the widget is initialized
+    startWSConnections();  // Start TCP connection when the widget is initialized
   }
 
   @override
   Widget build(BuildContext context){
-    //final currentWidth = MediaQuery.of(context).size.width;
-    //final currentHeight = MediaQuery.of(context).size.height;
     return Scaffold(
       appBar: const CustomAppBar(),
       body: SingleChildScrollView(
@@ -417,7 +390,9 @@ class _SE2702State extends State<SE2702> {
                                         const Size(100, 48)
                                     ),
                                   ),
-                                  child: const Text('Power On')
+                                  child: const Text(
+                                    'Power On',
+                                  )
                               ),
                               const SizedBox(width: 12,),
                               ElevatedButton(
@@ -528,11 +503,15 @@ class _SE2702State extends State<SE2702> {
                             ),
                           ),
                           const SizedBox(height: 12,),
-                          Text('Process Variable: $pvValue'), //${cosPoints.last.x.toStringAsFixed(2)}
+                          const Text('Simulation: Stop'), //${cosPoints.last.x.toStringAsFixed(2)}
                           const SizedBox(height: 4,),
-                          Text('Manipulated Variable: $mvValue'), //${sinPoints.last.x.toStringAsFixed(2)}
+                          const Text('PID Mode: Auto'),
+                          const SizedBox(height: 12,),
+                          Text('Process Variable: ${pvValue.toStringAsFixed(2)}'), //${cosPoints.last.x.toStringAsFixed(2)}
                           const SizedBox(height: 4,),
-                          Text('Setpoint Variable: ${svValue.toStringAsFixed(2)}'),
+                          Text('Manipulated Variable: ${mvValue.toStringAsFixed(2)}'), //${sinPoints.last.x.toStringAsFixed(2)}
+                          const SizedBox(height: 4,),
+                          Text('Setpoint Variable: $svValue'),
                         ],
                       ),
                     )
@@ -564,7 +543,12 @@ class _SE2702State extends State<SE2702> {
                               children: [
                                 ElevatedButton(
                                     onPressed: ()async{
-                                      await apiServices.startMatlab();
+                                      startWSConnections();
+                                      setState(() {
+                                        pvPoints = []; // Clear the data
+                                        svPoints = []; // Clear the data
+                                      });
+                                      await apiServices.matlabControl('se270', null, 'start');
                                     },
                                     style: ButtonStyle(
                                       shape: MaterialStateProperty.all<RoundedRectangleBorder>(
@@ -581,7 +565,8 @@ class _SE2702State extends State<SE2702> {
                                 const SizedBox(width: 12,),
                                 ElevatedButton(
                                     onPressed: ()async{
-                                      await apiServices.stopMatlab();
+                                      stopWSConnections();
+                                      await apiServices.matlabControl('se270', null, 'stop');
                                     },
                                     style: ButtonStyle(
                                       shape: MaterialStateProperty.all<RoundedRectangleBorder>(
@@ -595,26 +580,16 @@ class _SE2702State extends State<SE2702> {
                                     ),
                                     child: const Text('Stop')
                                 ),
-                              ],
-                            ),
-                            const SizedBox(height: 28,),
-                            const Text(
-                              'PID Control',
-                              style: TextStyle(
-                                  fontSize: 20
-                              ),
-                            ),
-                            const SizedBox(height: 12,),
-                            /*Row(
-                              crossAxisAlignment: CrossAxisAlignment.start,
-                              mainAxisAlignment: MainAxisAlignment.start,
-                              mainAxisSize: MainAxisSize.max,
-                              children: [
+                                const SizedBox(width: 24,),
+                                const VerticalDivider(
+                                  width: 20, // Width of the divider
+                                  thickness: 2, // Thickness of the line
+                                  color: Colors.white, // Color of the divider
+                                ),
+                                const SizedBox(width: 24,),
                                 ElevatedButton(
-                                    onPressed: (){
-                                      showDialog(context: context, builder: (context){
-                                        return const PIDDialog();
-                                      });
+                                    onPressed: ()async{
+                                      await apiServices.switchAutoMode();
                                     },
                                     style: ButtonStyle(
                                       shape: MaterialStateProperty.all<RoundedRectangleBorder>(
@@ -626,11 +601,35 @@ class _SE2702State extends State<SE2702> {
                                           const Size(100, 48)
                                       ),
                                     ),
-                                    child: const Text('PID Tuner')
+                                    child: const Text('Auto')
+                                ),
+                                const SizedBox(width: 12,),
+                                ElevatedButton(
+                                    onPressed: ()async{
+                                      await apiServices.switchManualMode();
+                                    },
+                                    style: ButtonStyle(
+                                      shape: MaterialStateProperty.all<RoundedRectangleBorder>(
+                                        RoundedRectangleBorder(
+                                          borderRadius: BorderRadius.circular(4.0),
+                                        ),
+                                      ),
+                                      minimumSize: MaterialStateProperty.all<Size>(
+                                          const Size(100, 48)
+                                      ),
+                                    ),
+                                    child: const Text('Manual')
                                 ),
                               ],
                             ),
-                            const SizedBox(height: 12,),*/
+                            const SizedBox(height: 28,),
+                            const Text(
+                              'PID Control',
+                              style: TextStyle(
+                                  fontSize: 20
+                              ),
+                            ),
+                            const SizedBox(height: 12,),
                             Row(
                               crossAxisAlignment: CrossAxisAlignment.center,
                               mainAxisAlignment: MainAxisAlignment.start,
@@ -638,9 +637,6 @@ class _SE2702State extends State<SE2702> {
                               children: [
                                 const Text(
                                   'P Value: ',
-                                  style: TextStyle(
-                                      color: Colors.white
-                                  ),
                                 ),
                                 SizedBox(
                                   width: 100,
@@ -650,12 +646,59 @@ class _SE2702State extends State<SE2702> {
                                       decimal: true,
                                     ),
                                     decoration: const InputDecoration(
-                                      border: UnderlineInputBorder(),
-                                      contentPadding: EdgeInsets.only(left: 12),
+                                      border: UnderlineInputBorder(
+                                        borderSide: BorderSide()
+                                      ),
+                                      isDense: true,
+                                      filled: true,
                                       //labelText: '  P Value',
                                     ),
                                     onSubmitted: (String value) async {
-                                      await apiServices.setPID('updatePID', 'P', num.parse(value));
+                                      await apiServices.setPID('updatePID', 'P', double.parse(value));
+                                    },
+                                  ),
+                                ),
+                                const SizedBox(width: 12,),
+                                const Text(
+                                  'I Value:  ',
+                                ),
+                                SizedBox(
+                                  width: 100,
+                                  child: TextField(
+                                    controller: kI,
+                                    keyboardType: const TextInputType.numberWithOptions(
+                                      decimal: true,
+                                    ),
+                                    decoration: const InputDecoration(
+                                      border: UnderlineInputBorder(),
+                                      isDense: true,
+                                      filled: true,
+                                      //labelText: '  P Value',
+                                    ),
+                                    onSubmitted: (String value) async {
+                                      await apiServices.setPID('updatePID', 'I', double.parse(value));
+                                    },
+                                  ),
+                                ),
+                                const SizedBox(width: 12,),
+                                const Text(
+                                  'D Value: ',
+                                ),
+                                SizedBox(
+                                  width: 100,
+                                  child: TextField(
+                                    controller: kD,
+                                    keyboardType: const TextInputType.numberWithOptions(
+                                      decimal: true,
+                                    ),
+                                    decoration: const InputDecoration(
+                                      border: UnderlineInputBorder(),
+                                      isDense: true,
+                                      filled: true,
+                                      //labelText: '  P Value',
+                                    ),
+                                    onSubmitted: (String value) async {
+                                      await apiServices.setPID('updatePID', 'D', double.parse(value));
                                     },
                                   ),
                                 )
@@ -668,55 +711,51 @@ class _SE2702State extends State<SE2702> {
                               mainAxisSize: MainAxisSize.max,
                               children: [
                                 const Text(
-                                  'I Value: ',
-                                  style: TextStyle(
-                                      color: Colors.white
-                                  ),
+                                  'Setpoint:  ',
                                 ),
                                 SizedBox(
                                   width: 100,
                                   child: TextField(
-                                    controller: kI,
+                                    controller: svTextController,
                                     keyboardType: const TextInputType.numberWithOptions(
                                       decimal: true,
                                     ),
                                     decoration: const InputDecoration(
                                       border: UnderlineInputBorder(),
-                                      contentPadding: EdgeInsets.only(left: 12),
+                                      isDense: true,
+                                      filled: true,
                                       //labelText: '  P Value',
                                     ),
+                                    onSubmitted: (String value) async {
+                                      await apiServices.setPID('changeSetPoint', 'setPoint', double.parse(value));
+                                    },
+                                  ),
+                                ),
+                                const SizedBox(width: 12,),
+                                const Text(
+                                  'Manipulated Value (MV): ',
+                                ),
+                                SizedBox(
+                                  width: 100,
+                                  child: TextField(
+                                    controller: mvTextController,
+                                    keyboardType: const TextInputType.numberWithOptions(
+                                      decimal: true,
+                                    ),
+                                    decoration: const InputDecoration(
+                                      border: UnderlineInputBorder(),
+                                      isDense: true,
+                                      filled: true,
+                                      //labelText: '  P Value',
+                                    ),
+                                    onSubmitted: (String value) async {
+                                      await apiServices.setPID('updateConstant', 'constantValue', double.parse(value));
+                                    },
                                   ),
                                 )
                               ],
                             ),
                             const SizedBox(height: 12,),
-                            Row(
-                              crossAxisAlignment: CrossAxisAlignment.center,
-                              mainAxisAlignment: MainAxisAlignment.start,
-                              mainAxisSize: MainAxisSize.max,
-                              children: [
-                                const Text(
-                                  'D Value: ',
-                                  style: TextStyle(
-                                      color: Colors.white
-                                  ),
-                                ),
-                                SizedBox(
-                                  width: 100,
-                                  child: TextField(
-                                    controller: kD,
-                                    keyboardType: const TextInputType.numberWithOptions(
-                                      decimal: true,
-                                    ),
-                                    decoration: const InputDecoration(
-                                      border: UnderlineInputBorder(),
-                                      contentPadding: EdgeInsets.only(left: 12),
-                                      //labelText: '  P Value',
-                                    ),
-                                  ),
-                                )
-                              ],
-                            ),
                           ],
                         ),
                       )
@@ -741,16 +780,37 @@ class _SE2702State extends State<SE2702> {
                       ),
                     ),
                     //const SizedBox(height: 24,),
-                    cosPoints.isNotEmpty ? AspectRatio(
+                    pvPoints.isNotEmpty ? AspectRatio(
                       aspectRatio: 3.5,
                       child: LineChart(
                         LineChartData(
-                          minY: -2,
-                          maxY: 2,
+                          minY: 0,
+                          maxY: 100,
                           minX: 0,//sinPoints.first.x,
                           maxX: 50,//sinPoints.last.x,
-                          lineTouchData: const LineTouchData(
-                              enabled: true
+                          lineTouchData: LineTouchData(
+                            enabled: true,
+                              touchTooltipData: LineTouchTooltipData(
+                              getTooltipItems: (List<LineBarSpot> touchedSpots) {
+                                return touchedSpots.map((spot) {
+                                  String label;
+                                  switch (spot.barIndex) {
+                                    case 0:
+                                      label = 'SV: ${spot.y.toStringAsFixed(2)}';
+                                      break;
+                                    case 1:
+                                      label = 'PV: ${spot.y.toStringAsFixed(2)}';
+                                      break;
+                                    default:
+                                      label = 'Unknown: ${spot.y}';
+                                  }
+                                  return LineTooltipItem(
+                                    label,
+                                    const TextStyle(color: Colors.black),
+                                  );
+                                }).toList();
+                              },
+                            ),
                           ),
                           clipData: const FlClipData.all(),
                           gridData: const FlGridData(
@@ -759,8 +819,8 @@ class _SE2702State extends State<SE2702> {
                           ),
                           borderData: FlBorderData(show: true),
                           lineBarsData: [
-                            sinLine(sinPoints),
-                            cosLine(cosPoints),
+                            sinLine(svPoints),
+                            cosLine(pvPoints),
                           ],
                           titlesData: const FlTitlesData(
                             topTitles: AxisTitles(
@@ -802,13 +862,7 @@ class _SE2702State extends State<SE2702> {
         show: false,
       ),
       color: Colors.green,
-      /*gradient: const LinearGradient(
-        //colors: [widget.sinColor.withOpacity(0), widget.sinColor],
-        colors: [Colors.green],
-        stops: [0.1, 1.0],
-      ),*/
       barWidth: 2,
-      isCurved: true,
     );
   }
 
@@ -819,19 +873,13 @@ class _SE2702State extends State<SE2702> {
         show: false,
       ),
       color: Colors.blue,
-      /*gradient: const LinearGradient(
-        colors: [Colors.blue],//[widget.cosColor.withOpacity(0), widget.cosColor],
-        stops: [0.1, 1.0],
-      ),*/
       barWidth: 2,
-      isCurved: true,
     );
   }
 
   @override
   void dispose() {
-    timer.cancel();
-    stopTcpConnection();  // Close the TCP connection when the widget is disposed
+    stopWSConnections();  // Close the TCP connection when the widget is disposed
     super.dispose();
   }
 }
