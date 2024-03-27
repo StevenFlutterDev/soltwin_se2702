@@ -1,6 +1,9 @@
 import 'dart:convert';
+import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
+import 'package:soltwin_se2702/Dialogs/share_message_dialog.dart';
 import 'package:soltwin_se2702/Services/getset_preferences.dart';
+import 'package:soltwin_se2702/main.dart';
 
 class APIServices{
   final String host = 'http://192.168.2.30:5000';
@@ -11,37 +14,40 @@ class APIServices{
 
   Future<bool> matlabControl(String model, String? subModel, String command) async {
     http.Response response;
+    try{
+      if(subModel == null) {
+        response = await http.post(
+            Uri.parse('$host/$model/command'),
+            headers: {
+              'Content-type': 'application/json'
+            },
+            body: json.encode({
+              'command': command
+            })
+        );
+      } else {
+        response = await http.post(
+            Uri.parse('$host/$model/$subModel/command'),
+            headers: {
+              'Content-type':'application/json'
+            },
+            body: json.encode({
+              'command': command
+            })
+        );
+      }
 
-    if(subModel == null){
-      response = await http.post(
-          Uri.parse('$host/$model/command'),
-          headers: {
-            'Content-type':'application/json'
-          },
-          body: json.encode({
-            'command': command
-          })
-      );
-    }else{
-      response = await http.post(
-          Uri.parse('$host/$model/$subModel/command'),
-          headers: {
-            'Content-type':'application/json'
-          },
-          body: json.encode({
-            'command': command
-          })
-      );
-    }
-
-
-    if (response.statusCode == 200) {
-      // Handle success
-      print('Success: ${response.body}');
-      return true;
-    } else {
-      // Handle error
-      print('Error: ${response.statusCode}');
+      if (response.statusCode == 200) {
+        // Handle success
+        print('Success: ${response.body}');
+        return true;
+      } else {
+        // Handle error
+        print('Error: ${response.statusCode}');
+        return false;
+      }
+    }catch(e){
+      showDialog(context: NavigationService.navigatorKey.currentContext!, builder: (context)=> ShareMessageDialog(contentMessage: e.toString()));
       return false;
     }
   }
@@ -51,90 +57,119 @@ class APIServices{
     ////updatePID for setting value P, I and D
     ////changeSetPoint for changing sv
     ////updateConstant for changing mv
-    http.Response response = await http.post(
-        Uri.parse('$host/command'),
-        headers: {
-          'Content-type':'application/json'
-        },
-        body: json.encode({
-          'command': command,
-          target: value
-        })
-    );
 
-    if (response.statusCode == 200) {
-      // Handle success
-      print('Success: ${response.body}');
-    } else {
-      // Handle error
-      print('Error: ${response.statusCode}');
+    try{
+      http.Response response = await http.post(
+          Uri.parse('$host/command'),
+          headers: {
+            'Content-type':'application/json'
+          },
+          body: json.encode({
+            'command': command,
+            target: value
+          })
+      );
+
+      if (response.statusCode == 200) {
+        // Handle success
+        print('Success: ${response.body}');
+      } else {
+        // Handle error
+        print('Error: ${response.statusCode}');
+      }
+    }catch (e){
+      showDialog(
+          context: NavigationService.navigatorKey.currentContext!,
+          builder: (context)=>ShareMessageDialog(contentMessage: e.toString()));
     }
   }
 
   Future<void> switchManualMode() async {
+    try{
+      http.Response response = await http.post(
+          Uri.parse('$host/command'),
+          headers: {
+            'Content-type':'application/json'
+          },
+          body: json.encode({
+            'command': 'manual',
+          })
+      );
 
-    http.Response response = await http.post(
-        Uri.parse('$host/command'),
-        headers: {
-          'Content-type':'application/json'
-        },
-        body: json.encode({
-          'command': 'manual',
-        })
-    );
-
-    if (response.statusCode == 200) {
-      // Handle success
-      print('Success: ${response.body}');
-    } else {
-      // Handle error
-      print('Error: ${response.statusCode}');
+      if (response.statusCode == 200) {
+        // Handle success
+        print('Success: ${response.body}');
+      } else {
+        // Handle error
+        print('Error: ${response.statusCode}');
+      }
+    }catch (e){
+      showDialog(
+          context: NavigationService.navigatorKey.currentContext!,
+          builder: (context)=>ShareMessageDialog(contentMessage: e.toString()));
     }
+
   }
 
   Future<void> switchAutoMode() async {
 
-    http.Response response = await http.post(
-        Uri.parse('$host/command'),
-        headers: {
-          'Content-type':'application/json'
-        },
-        body: json.encode({
-          'command': 'auto',
-        })
-    );
+    try{
+      http.Response response = await http.post(
+          Uri.parse('$host/command'),
+          headers: {
+            'Content-type':'application/json'
+          },
+          body: json.encode({
+            'command': 'auto',
+          })
+      );
 
-    if (response.statusCode == 200) {
-      // Handle success
-      print('Success: ${response.body}');
-    } else {
-      // Handle error
-      print('Error: ${response.statusCode}');
+      if (response.statusCode == 200) {
+        // Handle success
+        print('Success: ${response.body}');
+      } else {
+        // Handle error
+        print('Error: ${response.statusCode}');
+      }
+    }catch (e){
+      showDialog(
+          context: NavigationService.navigatorKey.currentContext!,
+          builder: (context)=>ShareMessageDialog(contentMessage: e.toString()));
     }
+
   }
 
   Future<bool> loginReq(String username, String password) async {
-    http.Response response = await http.post(
-        Uri.parse('$host/auth/login'),
-        body: {
-          'username': username,
-          'password': password
-        }
-    );
-    if(response.statusCode == 200) {
-      print('Login Successfully');
-      final responseJson = jsonDecode(response.body);
-      String userID = responseJson['userID'].toString();
 
-      ///Saved token for further used
-      print(userID);
-      await setUserID(userID);
-      return true;
-    }
-    else{
-      print('Wrong Username or Password');
+    try{
+      http.Response response = await http.post(
+          Uri.parse('$host/auth/login'),
+          body: {
+            'username': username,
+            'password': password
+          }
+      );
+      if(response.statusCode == 200) {
+        print('Login Successfully');
+        final responseJson = jsonDecode(response.body);
+        String userID = responseJson['userID'].toString();
+
+        ///Saved token for further used
+        print(userID);
+        await setUserID(userID);
+        return true;
+      }
+      else{
+        print('Wrong Username or Password');
+        return false;
+      }
+    }catch (e){
+      showDialog(
+          context: NavigationService.navigatorKey.currentContext!,
+          builder: (context)=>ShareMessageDialog(contentMessage: e.toString()));
       return false;
     }
+
   }
 
 }

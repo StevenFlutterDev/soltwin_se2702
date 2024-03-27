@@ -1,82 +1,45 @@
-import 'dart:html' as html;
-
 import 'package:flutter/material.dart';
+import 'package:provider/provider.dart';
+import 'package:soltwin_se2702/Providers/water_level_provider.dart';
 
-class WaterLevelAnimation extends StatefulWidget {
+class WaterLevelAnimation extends StatelessWidget {
   final double height;
   final double width;
-  final bool shouldAnimate;
-  final bool shouldReverse;
-  const WaterLevelAnimation({Key? key, required this.height, required this.width, required this.shouldAnimate, required this.shouldReverse}) : super(key:key);
+  final int tankNumber;
 
-  @override
-  WaterLevelAnimationState createState() => WaterLevelAnimationState();
-}
-
-class WaterLevelAnimationState extends State<WaterLevelAnimation>
-    with SingleTickerProviderStateMixin {
-  AnimationController? _animationController;
-  Animation<double>? _animation;
-
-  // Set up the visibility change listener
-
-
-  @override
-  void initState() {
-    super.initState();
-    _animationController =
-        AnimationController(vsync: this, duration: const Duration(seconds: 5));
-    _animation = Tween<double>(begin: 0.0, end: 1.0).animate(_animationController!);
-
-    //Set up the visibility change listener
-    html.document.addEventListener('visibilitychange', (_) {
-      if (html.document.visibilityState == 'visible') {
-        print('Page is visible');
-        // Ensure setState is called to resume animation and rebuild the widget
-        setState(() {
-          // This could be resuming the animation or any other state change you need
-          _animationController?.forward(from: 0.0);
-        });
-      } else {
-        print('Page is hidden');
-        // Optionally, pause the animation here
-        _animationController?.stop();
-      }
-    });
-
-    controlAnimation();
-  }
-
-  void controlAnimation() {
-    if (widget.shouldAnimate && !widget.shouldReverse) {
-      _animationController!.forward();
-    } else if (!widget.shouldAnimate && widget.shouldReverse) {
-      _animationController!.reverse();
-    } else {
-      _animationController!.stop();
-    }
-  }
-
-  @override
-  void didUpdateWidget(covariant WaterLevelAnimation oldWidget) {
-    super.didUpdateWidget(oldWidget);
-    controlAnimation();
-  }
-
-  @override
-  void dispose() {
-    _animationController?.dispose();
-    super.dispose();
-  }
+  const WaterLevelAnimation({
+    Key? key,
+    required this.height,
+    required this.width,
+    required this.tankNumber,
+  }) : super(key: key);
 
   @override
   Widget build(BuildContext context) {
-    return CustomPaint(
-      painter: WaterLevelPainter(_animation!.value),
-      child: SizedBox(
-        width: widget.width,
-        height: widget.height,
-      ),
+    return Consumer<WaterLevelProvider>(
+      builder: (context, provider, child) {
+        double level;
+        switch (tankNumber) {
+          case 1:
+            level = provider.tank1Level;
+            break;
+          case 2:
+            level = provider.tank2Level;
+            break;
+          case 3:
+            level = provider.tank3Level;
+            break;
+          default:
+            level = 0.0;
+        }
+        return CustomPaint(
+          painter: WaterLevelPainter(level),
+          child: SizedBox(
+            width: width,
+            height: height,
+          ),
+        );
+      },
     );
   }
 }

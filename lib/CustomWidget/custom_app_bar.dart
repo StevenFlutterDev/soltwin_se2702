@@ -12,6 +12,7 @@ class CustomAppBar extends StatelessWidget implements PreferredSizeWidget{
 
   @override
   Widget build(BuildContext context) {
+    final themeMode = Provider.of<ThemeProvider>(context).themeData;
     return AppBar(
       //backgroundColor: Colors.indigo[900],
       leading: Padding(
@@ -32,13 +33,24 @@ class CustomAppBar extends StatelessWidget implements PreferredSizeWidget{
       ),
       centerTitle: true,
       actions: [
-        IconButton(
-          icon: const Icon(
-            Icons.lightbulb_outline,
-            //color: Colors.white,
+        if(themeMode == ThemeMode.light)...[
+          IconButton(
+            icon: const Icon(
+              Icons.lightbulb_sharp,
+              color: Colors.white,
+            ),
+            onPressed: () => Provider.of<ThemeProvider>(context, listen: false).toggleTheme(),
           ),
-          onPressed: () => Provider.of<ThemeProvider>(context, listen: false).toggleTheme(),
-        ),
+        ] else ... [
+          IconButton(
+            icon: const Icon(
+              Icons.lightbulb_outline,
+
+              //color: Colors.white,
+            ),
+            onPressed: () => Provider.of<ThemeProvider>(context, listen: false).toggleTheme(),
+          ),
+        ],
         TextButton(
           onPressed: (){
             context.go('/');

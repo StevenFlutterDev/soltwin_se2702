@@ -1,7 +1,11 @@
+import 'dart:convert';
+
 import 'package:flutter/material.dart';
 import 'package:soltwin_se2702/CustomWidget/custom_app_bar.dart';
 import 'package:fl_chart/fl_chart.dart';
+import 'package:soltwin_se2702/Dialogs/share_message_dialog.dart';
 import 'package:soltwin_se2702/Services/rest_api.dart';
+import 'package:soltwin_se2702/Services/websocket.dart';
 
 class HE104 extends StatefulWidget {
   const HE104({Key? key}) : super(key: key);
@@ -13,15 +17,92 @@ class HE104 extends StatefulWidget {
 class _HE104State extends State<HE104> {
   final cosPoints = <FlSpot>[];
   final APIServices apiServices = APIServices();
-  String modelMode = 'CO-Current';
+  String modelMode = ' ';
+
+  WebSocketServices? webSocketServices;
+  double maxX = 50;
+
+  void startWSConnections() {
+    try{
+      webSocketServices = WebSocketServices('ws://192.168.2.30:3001');
+      webSocketServices?.onMessageReceived = (message) {
+        //print('WebSocket message: ${message.toString()}');
+        var jsonData = jsonDecode(message);
+        processWSData(jsonData);
+      };
+    }catch(e){
+      if(!mounted)return;
+      showDialog(
+          context: context,
+          builder: (context) => const ShareMessageDialog(
+              contentMessage: 'Unable to communicate with the server. Please try again later.'
+          ));
+    }
+  }
+
+  void stopWSConnections() {
+    webSocketServices?.disconnect();
+  }
+
+  void processWSData(var jsonData) {
+    // Extract data from jsonData and use it as needed
+    double time = jsonData['time'];
+    var thPartialArray = jsonData['th_partial'] ?? [[0.0,0.0]];
+    var tcPartialArray = jsonData['tc_partial'] ?? [[0.0,0.0]];
+    double volFlowHot = jsonData['VolFlowHot'] ?? 0;
+    double volFlowCold = jsonData['VolFlowCold'] ?? 0;
+    double thFull = jsonData['Th_full'] ?? 0;
+    double tcFull= jsonData['Tc_full'] ?? 0;
+    double thOutlet = jsonData['Th_outlet'] ?? 0;
+    double tcOutlet = jsonData['Tc_outlet'] ?? 0;
+
+
+    setState(() {
+      thPartialPlot = thPartialArray.map((e)=> FlSpot(e[0], e[1])).toList();
+      tcPartialPlot = tcPartialArray.map((e)=> FlSpot(e[0], e[1])).toList();
+      volFlowHotPlot.add(FlSpot(time, volFlowHot));
+      volFlowColdPlot.add(FlSpot(time, volFlowCold));
+      thFullPlot.add(FlSpot(time, thFull));
+      tcFullPlot.add(FlSpot(time, tcFull));
+      thOutletPlot.add(FlSpot(time, thOutlet));
+      tcOutletPlot.add(FlSpot(time, tcOutlet));
+
+
+      //change maxX if longer than 50 seconds
+      if(time > maxX){
+        setState(() {
+          maxX += 1;
+        });
+      }
+      // Update your chart or state based on new data
+    });
+  }
+
+  //fl_chart settings
+  final limitCount = 1000;
+  var thPartialPlot = <FlSpot>[];
+  var tcPartialPlot = <FlSpot>[];
+  var volFlowHotPlot = <FlSpot>[];
+  var volFlowColdPlot = <FlSpot>[];
+  var thFullPlot = <FlSpot>[];
+  var tcFullPlot = <FlSpot>[];
+  var thOutletPlot = <FlSpot>[];
+  var tcOutletPlot = <FlSpot>[];
+
+  double xValue = 0;
+  double step = 0.05;
+
+  //Display API status message
+  String statusMessage = '';
+  bool isShowingMessage = false;
 
   @override
   void initState() {
     // TODO: implement initState
     super.initState();
-    setState(() {
+    /*setState(() {
       cosPoints.add(const FlSpot(0, 0));
-    });
+    });*/
   }
 
   @override
@@ -42,10 +123,13 @@ class _HE104State extends State<HE104> {
                       SizedBox(
                         width: currentWidth / 5,
                         height: currentHeight / 3,
-                        child: Image.asset(
-                          'assets/images/HE104.png',
-                          filterQuality: FilterQuality.high,
-                          fit: BoxFit.fill,
+                        child: Padding(
+                          padding: const EdgeInsets.only(left: 12.0),
+                          child: Image.asset(
+                            'assets/images/HE104.png',
+                            filterQuality: FilterQuality.high,
+                            fit: BoxFit.fill,
+                          ),
                         ),
                       ),
                     ],
@@ -80,40 +164,74 @@ class _HE104State extends State<HE104> {
                                 mainAxisSize: MainAxisSize.max,
                                 children: [
                                   ElevatedButton(
-                                      onPressed: ()async{
+                                    onPressed: ()async{
+                                      try{
                                         bool result = await apiServices.matlabControl('he104', 'co', 'run');
                                         if(result){
                                           setState(() {
                                             modelMode = 'CO-Current';
                                           });
+                                        }else{
+                                          setState(() {
+                                            modelMode = ' ';
+                                          });
                                         }
-                                      },
-                                      style: ButtonStyle(
-                                        shape: MaterialStateProperty.all<RoundedRectangleBorder>(
-                                          RoundedRectangleBorder(
-                                            borderRadius: BorderRadius.circular(4.0),
-                                          ),
-                                        ),
-                                        minimumSize: MaterialStateProperty.all<Size>(
-                                            const Size(100, 48)
-                                        ),
-                                        backgroundColor: MaterialStateProperty.all<Color>(
-                                            modelMode == 'CO-Current' ? Colors.green : Colors.grey[900]!
+                                      }catch(e){
+                                        if(!mounted)return;
+                                        showDialog(
+                                          context: context,
+                                          builder: (context) => const ShareMessageDialog(
+                                              contentMessage: 'Unable to communicate with the server. Please try again later.'
+                                          ));
+                                      }
+                                    },
+                                    style: ButtonStyle(
+                                      shape: MaterialStateProperty.all<RoundedRectangleBorder>(
+                                        RoundedRectangleBorder(
+                                          borderRadius: BorderRadius.circular(4.0),
                                         ),
                                       ),
-                                      child: const Text(
-                                          'CO-Current',
-                                      )
+                                      minimumSize: MaterialStateProperty.all<Size>(
+                                          const Size(100, 48)
+                                      ),
+                                      backgroundColor: MaterialStateProperty.all<Color>(
+                                          modelMode == 'CO-Current' ? Colors.green : Colors.grey[900]!
+                                      ),
+                                    ),
+                                    child: const Text(
+                                        'CO-Current',
+                                    )
                                   ),
                                   const SizedBox(width: 12,),
                                   ElevatedButton(
                                       onPressed: ()async{
-                                        bool result = await apiServices.matlabControl('he104', 'counter', 'run');
-                                        if(result){
-                                          setState(() {
-                                            modelMode = 'Counter Current';
-                                          });
+                                        try{
+
+                                        }catch(e){
+                                          if(!mounted)return;
+                                          showDialog(
+                                              context: context,
+                                              builder: (context) => const ShareMessageDialog(
+                                                  contentMessage: 'Unable to communicate with the server. Please try again later.'
+                                              ));
                                         }
+                                          bool result = await apiServices.matlabControl('he104', 'counter', 'run');
+                                          if(result){
+                                            setState(() {
+                                              modelMode = 'Counter Current';
+                                            });
+                                          }else{
+                                            setState(() {
+                                              modelMode = ' ';
+                                            });
+                                            if(!mounted)return;
+                                            showDialog(
+                                                context: context, builder: (BuildContext context) {
+                                              return const ShareMessageDialog(
+                                                  contentMessage: 'Not able to communicate to the server. Please try again later'
+                                              );
+                                            });
+                                          }
                                       },
                                       style: ButtonStyle(
                                         shape: MaterialStateProperty.all<RoundedRectangleBorder>(
@@ -180,7 +298,16 @@ class _HE104State extends State<HE104> {
                                 children: [
                                   ElevatedButton(
                                       onPressed: ()async{
-                                        await apiServices.matlabControl('he104', 'co', 'start');
+                                        try{
+                                          await apiServices.matlabControl('he104', 'co', 'start');
+                                        }catch(e){
+                                          if(!mounted)return;
+                                          showDialog(
+                                              context: context,
+                                              builder: (context) => const ShareMessageDialog(
+                                                  contentMessage: 'Unable to communicate with the server. Please try again later.'
+                                              ));
+                                        }
                                       },
                                       style: ButtonStyle(
                                         shape: MaterialStateProperty.all<RoundedRectangleBorder>(
@@ -197,7 +324,16 @@ class _HE104State extends State<HE104> {
                                   const SizedBox(width: 12,),
                                   ElevatedButton(
                                       onPressed: ()async{
-                                        await apiServices.matlabControl('he104', 'co', 'stop');
+                                        try{
+                                          await apiServices.matlabControl('he104', 'co', 'stop');
+                                        }catch(e){
+                                          if(!mounted)return;
+                                          showDialog(
+                                              context: context,
+                                              builder: (context) => const ShareMessageDialog(
+                                                  contentMessage: 'Unable to communicate with the server. Please try again later.'
+                                              ));
+                                        }
                                       },
                                       style: ButtonStyle(
                                         shape: MaterialStateProperty.all<RoundedRectangleBorder>(
@@ -279,7 +415,8 @@ class _HE104State extends State<HE104> {
                                         ),
                                         borderData: FlBorderData(show: true),
                                         lineBarsData: [
-                                          cosLine(cosPoints),
+                                          graphLine(thPartialPlot, Colors.red),
+                                          graphLine(tcPartialPlot, Colors.blue),
                                         ],
                                         titlesData: const FlTitlesData(
                                           topTitles: AxisTitles(
@@ -343,7 +480,7 @@ class _HE104State extends State<HE104> {
                                   style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
                                 ),
                               ),
-                              cosPoints.isNotEmpty ?
+                              volFlowHotPlot.isNotEmpty ?
                               SizedBox(
                                 height: currentHeight/4,
                                 width: currentWidth/5,
@@ -363,7 +500,7 @@ class _HE104State extends State<HE104> {
                                     ),
                                     borderData: FlBorderData(show: true),
                                     lineBarsData: [
-                                      cosLine(cosPoints),
+                                      graphLine(volFlowHotPlot, Colors.red),
                                     ],
                                     titlesData: const FlTitlesData(
                                       topTitles: AxisTitles(
@@ -439,7 +576,7 @@ class _HE104State extends State<HE104> {
                                     ),
                                     borderData: FlBorderData(show: true),
                                     lineBarsData: [
-                                      cosLine(cosPoints),
+                                      graphLine(thFullPlot, Colors.red),
                                     ],
                                     titlesData: const FlTitlesData(
                                       topTitles: AxisTitles(
@@ -515,7 +652,7 @@ class _HE104State extends State<HE104> {
                                     ),
                                     borderData: FlBorderData(show: true),
                                     lineBarsData: [
-                                      cosLine(cosPoints),
+                                      graphLine(thOutletPlot, Colors.red),
                                     ],
                                     titlesData: const FlTitlesData(
                                       topTitles: AxisTitles(
@@ -597,7 +734,7 @@ class _HE104State extends State<HE104> {
                                     ),
                                     borderData: FlBorderData(show: true),
                                     lineBarsData: [
-                                      cosLine(cosPoints),
+                                      graphLine(volFlowColdPlot, Colors.blue),
                                     ],
                                     titlesData: const FlTitlesData(
                                       topTitles: AxisTitles(
@@ -673,7 +810,7 @@ class _HE104State extends State<HE104> {
                                     ),
                                     borderData: FlBorderData(show: true),
                                     lineBarsData: [
-                                      cosLine(cosPoints),
+                                      graphLine(tcFullPlot, Colors.blue),
                                     ],
                                     titlesData: const FlTitlesData(
                                       topTitles: AxisTitles(
@@ -750,7 +887,7 @@ class _HE104State extends State<HE104> {
                                     ),
                                     borderData: FlBorderData(show: true),
                                     lineBarsData: [
-                                      cosLine(cosPoints),
+                                      graphLine(tcOutletPlot, Colors.blue),
                                     ],
                                     titlesData: const FlTitlesData(
                                       topTitles: AxisTitles(
@@ -802,19 +939,14 @@ class _HE104State extends State<HE104> {
     );
   }
 
-  LineChartBarData cosLine(List<FlSpot> points) {
+  LineChartBarData graphLine(List<FlSpot> points, Color? color){
     return LineChartBarData(
       spots: points,
       dotData: const FlDotData(
         show: false,
       ),
-      color: Colors.blue,
-      /*gradient: const LinearGradient(
-        colors: [Colors.blue],//[widget.cosColor.withOpacity(0), widget.cosColor],
-        stops: [0.1, 1.0],
-      ),*/
+      color: color,
       barWidth: 2,
-      isCurved: true,
     );
   }
 

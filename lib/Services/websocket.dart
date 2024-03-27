@@ -1,3 +1,6 @@
+import 'package:flutter/material.dart';
+import 'package:soltwin_se2702/Dialogs/share_message_dialog.dart';
+import 'package:soltwin_se2702/main.dart';
 import 'package:web_socket_channel/web_socket_channel.dart';
 
 class WebSocketServices{
@@ -5,10 +8,17 @@ class WebSocketServices{
   Function(String)? onMessageReceived;
 
   WebSocketServices(String url) {
-    channel = WebSocketChannel.connect(Uri.parse(url));
-    channel.stream.listen((message) {
-      onMessageReceived?.call(message);
-    });
+    try{
+      channel = WebSocketChannel.connect(Uri.parse(url));
+      channel.stream.listen((message) {
+        onMessageReceived?.call(message);
+      });
+    }catch (e){
+      showDialog(
+          context: NavigationService.navigatorKey.currentContext!,
+          builder: (context)=>ShareMessageDialog(contentMessage: e.toString()));
+    }
+
   }
 
   void sendMessage(String message) {
