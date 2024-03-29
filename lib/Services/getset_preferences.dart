@@ -1,20 +1,20 @@
 import 'package:shared_preferences/shared_preferences.dart';
 
 const String isDarkMode = 'isDarkMode';
-const String prefUserID = 'userID';
+const String prefUserToken = 'userID';
 const String rememberMeString = 'rememberMe';
 const String savedUsername = 'savedUsername';
 const String savedPassword = 'savedPassword';
 
 ///Set User Token to Shared Preferences
-setUserID(String id) async{
+setUserToken(String token) async{
   SharedPreferences prefs = await SharedPreferences.getInstance();
-  await prefs.setString(prefUserID, id);
+  await prefs.setString(prefUserToken, token);
 }
 ///Get User Token from Shared Preferences
-Future<String> getUserID() async{
+Future<String> getUserToken() async{
   SharedPreferences prefs = await SharedPreferences.getInstance();
-  String value = prefs.getString(prefUserID) ?? 'id';
+  String value = prefs.getString(prefUserToken) ?? 'token';
   return value;
 }
 

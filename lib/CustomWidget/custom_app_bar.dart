@@ -2,6 +2,8 @@ import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import 'package:provider/provider.dart';
 import 'package:soltwin_se2702/Dialogs/login_dialog.dart';
+import 'package:soltwin_se2702/Dialogs/logout_dialog.dart';
+import 'package:soltwin_se2702/Providers/login_provider.dart';
 import 'package:soltwin_se2702/Providers/theme_provider.dart';
 
 class CustomAppBar extends StatelessWidget implements PreferredSizeWidget{
@@ -13,6 +15,7 @@ class CustomAppBar extends StatelessWidget implements PreferredSizeWidget{
   @override
   Widget build(BuildContext context) {
     final themeMode = Provider.of<ThemeProvider>(context).themeData;
+    final isLoggedIn = Provider.of<LoginProvider>(context).isLoggedIn;
     return AppBar(
       //backgroundColor: Colors.indigo[900],
       leading: Padding(
@@ -62,7 +65,19 @@ class CustomAppBar extends StatelessWidget implements PreferredSizeWidget{
             ),
           )
         ),
-        Padding(
+        isLoggedIn ? Padding(
+          padding: const EdgeInsets.only(right: 12.0),
+          child: TextButton(
+              onPressed: (){
+                showDialog(context: context, builder: (context)=>const LogoutDialog());
+              },
+              child: const Text(
+                'Logout',
+                style: TextStyle(
+                  letterSpacing: 1.2,
+                ),
+              )),
+        ): Padding(
           padding: const EdgeInsets.only(right: 12.0),
           child: TextButton(
               onPressed: (){

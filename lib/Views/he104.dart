@@ -24,7 +24,7 @@ class _HE104State extends State<HE104> {
 
   void startWSConnections() {
     try{
-      webSocketServices = WebSocketServices('ws://192.168.2.30:3001');
+      webSocketServices = WebSocketServices('ws://192.168.1.102:3003');
       webSocketServices?.onMessageReceived = (message) {
         //print('WebSocket message: ${message.toString()}');
         var jsonData = jsonDecode(message);
@@ -206,15 +206,6 @@ class _HE104State extends State<HE104> {
                                   ElevatedButton(
                                       onPressed: ()async{
                                         try{
-
-                                        }catch(e){
-                                          if(!mounted)return;
-                                          showDialog(
-                                              context: context,
-                                              builder: (context) => const ShareMessageDialog(
-                                                  contentMessage: 'Unable to communicate with the server. Please try again later.'
-                                              ));
-                                        }
                                           bool result = await apiServices.matlabControl('he104', 'counter', 'run');
                                           if(result){
                                             setState(() {
@@ -232,6 +223,15 @@ class _HE104State extends State<HE104> {
                                               );
                                             });
                                           }
+                                        }catch(e){
+                                          if(!mounted)return;
+                                          showDialog(
+                                            context: context,
+                                            builder: (context) => const ShareMessageDialog(
+                                                contentMessage: 'Unable to communicate with the server. Please try again later.'
+                                            )
+                                          );
+                                        }
                                       },
                                       style: ButtonStyle(
                                         shape: MaterialStateProperty.all<RoundedRectangleBorder>(
@@ -364,571 +364,574 @@ class _HE104State extends State<HE104> {
                   ),
                 ],
               ),
-              Padding(
-                padding: const EdgeInsets.all(20),
-                child: Card(
-                  elevation: 20,
-                  child: Row(
-                    mainAxisAlignment: MainAxisAlignment.center,
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Column(
-                        children: [
-                          const Padding(
-                            padding: EdgeInsets.all(24.0),
-                            child: Text(
-                              'Temperature Profile',
-                              style: TextStyle(
-                                  fontSize: 24
-                              ),
-                            ),
-                          ),
-                          //const SizedBox(height: 24,),
-                          cosPoints.isNotEmpty ?
-                          Row(
-                            children: [
-                              const RotatedBox(
-                                quarterTurns: -1,
-                                child: Text(
-                                  'Temperature (C)', // Rotated Y-axis title
-                                  style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
+              Visibility(
+                visible: thPartialPlot.isNotEmpty,
+                child: Padding(
+                  padding: const EdgeInsets.all(20),
+                  child: Card(
+                    elevation: 20,
+                    child: Row(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Column(
+                          children: [
+                            const Padding(
+                              padding: EdgeInsets.all(24.0),
+                              child: Text(
+                                'Temperature Profile',
+                                style: TextStyle(
+                                    fontSize: 24
                                 ),
                               ),
-                              Column(
-                                children: [
-                                  SizedBox(
-                                    height: currentHeight/1.1,
-                                    width: currentWidth/3,
-                                    child: LineChart(
-                                      LineChartData(
-                                        minY: 0,
-                                        maxY: 80,
-                                        minX: 0,//sinPoints.first.x,
-                                        maxX: 0.5,//sinPoints.last.x,
-                                        lineTouchData: const LineTouchData(
-                                            enabled: true
-                                        ),
-                                        clipData: const FlClipData.all(),
-                                        gridData: const FlGridData(
-                                          show: true,
-                                          drawVerticalLine: true,
-                                        ),
-                                        borderData: FlBorderData(show: true),
-                                        lineBarsData: [
-                                          graphLine(thPartialPlot, Colors.red),
-                                          graphLine(tcPartialPlot, Colors.blue),
-                                        ],
-                                        titlesData: const FlTitlesData(
-                                          topTitles: AxisTitles(
-                                              sideTitles: SideTitles(showTitles: false)
+                            ),
+                            //const SizedBox(height: 24,),
+                            cosPoints.isNotEmpty ?
+                            Row(
+                              children: [
+                                const RotatedBox(
+                                  quarterTurns: -1,
+                                  child: Text(
+                                    'Temperature (C)', // Rotated Y-axis title
+                                    style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
+                                  ),
+                                ),
+                                Column(
+                                  children: [
+                                    SizedBox(
+                                      height: currentHeight/1.1,
+                                      width: currentWidth/3,
+                                      child: LineChart(
+                                        LineChartData(
+                                          minY: 0,
+                                          maxY: 80,
+                                          minX: 0,//sinPoints.first.x,
+                                          maxX: 0.5,//sinPoints.last.x,
+                                          lineTouchData: const LineTouchData(
+                                              enabled: true
                                           ),
-                                          rightTitles: AxisTitles(
-                                              sideTitles: SideTitles(showTitles: false)
+                                          clipData: const FlClipData.all(),
+                                          gridData: const FlGridData(
+                                            show: true,
+                                            drawVerticalLine: true,
                                           ),
-                                          bottomTitles: AxisTitles(
+                                          borderData: FlBorderData(show: true),
+                                          lineBarsData: [
+                                            graphLine(thPartialPlot, Colors.red),
+                                            graphLine(tcPartialPlot, Colors.blue),
+                                          ],
+                                          titlesData: const FlTitlesData(
+                                            topTitles: AxisTitles(
+                                                sideTitles: SideTitles(showTitles: false)
+                                            ),
+                                            rightTitles: AxisTitles(
+                                                sideTitles: SideTitles(showTitles: false)
+                                            ),
+                                            bottomTitles: AxisTitles(
+                                              sideTitles: SideTitles(
+                                                showTitles: true,
+                                                reservedSize: 30
+                                              )
+                                            ),
+                                            leftTitles: AxisTitles(
+                                              sideTitles: SideTitles(
+                                                showTitles: true,
+                                                reservedSize: 40
+                                              )
+                                            ),
+                                          ),
+                                        ),
+                                      ),
+                                    ),
+                                    const Padding(
+                                      padding: EdgeInsets.only(top:8.0, bottom: 24.0),
+                                      child: Text(
+                                        'Length (m)', // Rotated Y-axis title
+                                        style: TextStyle(
+                                          fontSize: 16,
+                                          fontWeight: FontWeight.bold,
+                                          letterSpacing: 1.2
+                                        ),
+                                      ),
+                                    ),
+                                  ],
+                                ),
+                              ],
+                            ):
+                            Container(),
+                          ],
+                        ),
+                        const SizedBox(width: 36.0,),
+                        Column(
+                          children: [
+                            const Padding(
+                              padding: EdgeInsets.all(24.0),
+                              child: Text(
+                                'Hot Stream Flowrate',
+                                style: TextStyle(
+                                    fontSize: 20
+                                ),
+                              ),
+                            ),
+                            Row(
+                              children: [
+                                const RotatedBox(
+                                  quarterTurns: -1,
+                                  child: Text(
+                                    'Flowrate (L/min)', // Rotated Y-axis title
+                                    style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
+                                  ),
+                                ),
+                                volFlowHotPlot.isNotEmpty ?
+                                SizedBox(
+                                  height: currentHeight/4,
+                                  width: currentWidth/5,
+                                  child: LineChart(
+                                    LineChartData(
+                                      minY: 0,
+                                      maxY: 6,
+                                      minX: 0,//sinPoints.first.x,
+                                      maxX: 100,//sinPoints.last.x,
+                                      lineTouchData: const LineTouchData(
+                                          enabled: true
+                                      ),
+                                      clipData: const FlClipData.all(),
+                                      gridData: const FlGridData(
+                                        show: true,
+                                        drawVerticalLine: true,
+                                      ),
+                                      borderData: FlBorderData(show: true),
+                                      lineBarsData: [
+                                        graphLine(volFlowHotPlot, Colors.red),
+                                      ],
+                                      titlesData: const FlTitlesData(
+                                        topTitles: AxisTitles(
+                                            sideTitles: SideTitles(showTitles: false)
+                                        ),
+                                        rightTitles: AxisTitles(
+                                            sideTitles: SideTitles(showTitles: false)
+                                        ),
+                                        bottomTitles: AxisTitles(
                                             sideTitles: SideTitles(
-                                              showTitles: true,
-                                              reservedSize: 30
+                                                showTitles: true,
+                                                reservedSize: 30
                                             )
-                                          ),
-                                          leftTitles: AxisTitles(
+                                        ),
+                                        leftTitles: AxisTitles(
                                             sideTitles: SideTitles(
-                                              showTitles: true,
-                                              reservedSize: 40
+                                                showTitles: true,
+                                                reservedSize: 40
                                             )
-                                          ),
                                         ),
                                       ),
                                     ),
                                   ),
-                                  const Padding(
-                                    padding: EdgeInsets.only(top:8.0, bottom: 24.0),
-                                    child: Text(
-                                      'Length (m)', // Rotated Y-axis title
-                                      style: TextStyle(
-                                        fontSize: 16,
-                                        fontWeight: FontWeight.bold,
-                                        letterSpacing: 1.2
+                                ):
+                                Container(),
+                              ],
+                            ),
+                            const Padding(
+                              padding: EdgeInsets.only(top:8.0),
+                              child: Text(
+                                'Time (s)', // Rotated Y-axis title
+                                style: TextStyle(
+                                    fontSize: 16,
+                                    letterSpacing: 1.2
+                                ),
+                              ),
+                            ),
+                            const Padding(
+                              padding: EdgeInsets.only(top: 8.0, bottom: 8.0),
+                              child: Text(
+                                'Hot Stream Inlet Temperature',
+                                style: TextStyle(
+                                    fontSize: 20
+                                ),
+                              ),
+                            ),
+                            Row(
+                              children: [
+                                const RotatedBox(
+                                  quarterTurns: -1,
+                                  child: Text(
+                                    'Temperature (C)', // Rotated Y-axis title
+                                    style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
+                                  ),
+                                ),
+                                cosPoints.isNotEmpty ?
+                                SizedBox(
+                                  height: currentHeight/4,
+                                  width: currentWidth/5,
+                                  child: LineChart(
+                                    LineChartData(
+                                      minY: 20,
+                                      maxY: 70,
+                                      minX: 0,//sinPoints.first.x,
+                                      maxX: 100,//sinPoints.last.x,
+                                      lineTouchData: const LineTouchData(
+                                          enabled: true
+                                      ),
+                                      clipData: const FlClipData.all(),
+                                      gridData: const FlGridData(
+                                        show: true,
+                                        drawVerticalLine: true,
+                                      ),
+                                      borderData: FlBorderData(show: true),
+                                      lineBarsData: [
+                                        graphLine(thFullPlot, Colors.red),
+                                      ],
+                                      titlesData: const FlTitlesData(
+                                        topTitles: AxisTitles(
+                                            sideTitles: SideTitles(showTitles: false)
+                                        ),
+                                        rightTitles: AxisTitles(
+                                            sideTitles: SideTitles(showTitles: false)
+                                        ),
+                                        bottomTitles: AxisTitles(
+                                            sideTitles: SideTitles(
+                                                showTitles: true,
+                                                reservedSize: 30
+                                            )
+                                        ),
+                                        leftTitles: AxisTitles(
+                                            sideTitles: SideTitles(
+                                                showTitles: true,
+                                                reservedSize: 40
+                                            )
+                                        ),
                                       ),
                                     ),
                                   ),
-                                ],
-                              ),
-                            ],
-                          ):
-                          Container(),
-                        ],
-                      ),
-                      const SizedBox(width: 36.0,),
-                      Column(
-                        children: [
-                          const Padding(
-                            padding: EdgeInsets.all(24.0),
-                            child: Text(
-                              'Hot Stream Flowrate',
-                              style: TextStyle(
-                                  fontSize: 20
-                              ),
+                                ):
+                                Container(),
+                              ],
                             ),
-                          ),
-                          Row(
-                            children: [
-                              const RotatedBox(
-                                quarterTurns: -1,
-                                child: Text(
-                                  'Flowrate (L/min)', // Rotated Y-axis title
-                                  style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
+                            const Padding(
+                              padding: EdgeInsets.only(top:8.0),
+                              child: Text(
+                                'Time (s)', // Rotated Y-axis title
+                                style: TextStyle(
+                                    fontSize: 16,
+                                    letterSpacing: 1.2
                                 ),
                               ),
-                              volFlowHotPlot.isNotEmpty ?
-                              SizedBox(
-                                height: currentHeight/4,
-                                width: currentWidth/5,
-                                child: LineChart(
-                                  LineChartData(
-                                    minY: 0,
-                                    maxY: 6,
-                                    minX: 0,//sinPoints.first.x,
-                                    maxX: 100,//sinPoints.last.x,
-                                    lineTouchData: const LineTouchData(
-                                        enabled: true
-                                    ),
-                                    clipData: const FlClipData.all(),
-                                    gridData: const FlGridData(
-                                      show: true,
-                                      drawVerticalLine: true,
-                                    ),
-                                    borderData: FlBorderData(show: true),
-                                    lineBarsData: [
-                                      graphLine(volFlowHotPlot, Colors.red),
-                                    ],
-                                    titlesData: const FlTitlesData(
-                                      topTitles: AxisTitles(
-                                          sideTitles: SideTitles(showTitles: false)
+                            ),
+                            const Padding(
+                              padding: EdgeInsets.only(top: 8.0, bottom: 8.0),
+                              child: Text(
+                                'Hot Stream Outlet Temperature',
+                                style: TextStyle(
+                                    fontSize: 20
+                                ),
+                              ),
+                            ),
+                            Row(
+                              children: [
+                                const RotatedBox(
+                                  quarterTurns: -1,
+                                  child: Text(
+                                    'Temperature (C)', // Rotated Y-axis title
+                                    style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
+                                  ),
+                                ),
+                                cosPoints.isNotEmpty ?
+                                SizedBox(
+                                  height: currentHeight/4,
+                                  width: currentWidth/5,
+                                  child: LineChart(
+                                    LineChartData(
+                                      minY: 20,
+                                      maxY: 70,
+                                      minX: 0,//sinPoints.first.x,
+                                      maxX: 100,//sinPoints.last.x,
+                                      lineTouchData: const LineTouchData(
+                                          enabled: true
                                       ),
-                                      rightTitles: AxisTitles(
-                                          sideTitles: SideTitles(showTitles: false)
+                                      clipData: const FlClipData.all(),
+                                      gridData: const FlGridData(
+                                        show: true,
+                                        drawVerticalLine: true,
                                       ),
-                                      bottomTitles: AxisTitles(
-                                          sideTitles: SideTitles(
-                                              showTitles: true,
-                                              reservedSize: 30
-                                          )
-                                      ),
-                                      leftTitles: AxisTitles(
-                                          sideTitles: SideTitles(
-                                              showTitles: true,
-                                              reservedSize: 40
-                                          )
+                                      borderData: FlBorderData(show: true),
+                                      lineBarsData: [
+                                        graphLine(thOutletPlot, Colors.red),
+                                      ],
+                                      titlesData: const FlTitlesData(
+                                        topTitles: AxisTitles(
+                                            sideTitles: SideTitles(showTitles: false)
+                                        ),
+                                        rightTitles: AxisTitles(
+                                            sideTitles: SideTitles(showTitles: false)
+                                        ),
+                                        bottomTitles: AxisTitles(
+                                            sideTitles: SideTitles(
+                                                showTitles: true,
+                                                reservedSize: 30
+                                            )
+                                        ),
+                                        leftTitles: AxisTitles(
+                                            sideTitles: SideTitles(
+                                                showTitles: true,
+                                                reservedSize: 40
+                                            )
+                                        ),
                                       ),
                                     ),
                                   ),
-                                ),
-                              ):
-                              Container(),
-                            ],
-                          ),
-                          const Padding(
-                            padding: EdgeInsets.only(top:8.0),
-                            child: Text(
-                              'Time (s)', // Rotated Y-axis title
-                              style: TextStyle(
-                                  fontSize: 16,
-                                  letterSpacing: 1.2
-                              ),
+                                ):
+                                Container(),
+                              ],
                             ),
-                          ),
-                          const Padding(
-                            padding: EdgeInsets.only(top: 8.0, bottom: 8.0),
-                            child: Text(
-                              'Hot Stream Inlet Temperature',
-                              style: TextStyle(
-                                  fontSize: 20
-                              ),
-                            ),
-                          ),
-                          Row(
-                            children: [
-                              const RotatedBox(
-                                quarterTurns: -1,
-                                child: Text(
-                                  'Temperature (C)', // Rotated Y-axis title
-                                  style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
+                            const Padding(
+                              padding: EdgeInsets.only(top:8.0),
+                              child: Text(
+                                'Time (s)', // Rotated Y-axis title
+                                style: TextStyle(
+                                    fontSize: 16,
+                                    letterSpacing: 1.2
                                 ),
                               ),
-                              cosPoints.isNotEmpty ?
-                              SizedBox(
-                                height: currentHeight/4,
-                                width: currentWidth/5,
-                                child: LineChart(
-                                  LineChartData(
-                                    minY: 20,
-                                    maxY: 70,
-                                    minX: 0,//sinPoints.first.x,
-                                    maxX: 100,//sinPoints.last.x,
-                                    lineTouchData: const LineTouchData(
-                                        enabled: true
-                                    ),
-                                    clipData: const FlClipData.all(),
-                                    gridData: const FlGridData(
-                                      show: true,
-                                      drawVerticalLine: true,
-                                    ),
-                                    borderData: FlBorderData(show: true),
-                                    lineBarsData: [
-                                      graphLine(thFullPlot, Colors.red),
-                                    ],
-                                    titlesData: const FlTitlesData(
-                                      topTitles: AxisTitles(
-                                          sideTitles: SideTitles(showTitles: false)
+                            ),
+                          ],
+                        ),
+                        const SizedBox(width: 36.0,),
+                        Column(
+                          crossAxisAlignment: CrossAxisAlignment.center,
+                          children: [
+                            const Padding(
+                              padding: EdgeInsets.all(24.0),
+                              child: Text(
+                                'Cold Stream Flowrate',
+                                style: TextStyle(
+                                    fontSize: 20
+                                ),
+                              ),
+                            ),
+                            Row(
+                              children: [
+                                const RotatedBox(
+                                  quarterTurns: -1,
+                                  child: Text(
+                                    'Flowrate (L/min)', // Rotated Y-axis title
+                                    style: TextStyle(fontSize: 16,),
+                                  ),
+                                ),
+                                cosPoints.isNotEmpty ?
+                                SizedBox(
+                                  height: currentHeight/4,
+                                  width: currentWidth/5,
+                                  child: LineChart(
+                                    LineChartData(
+                                      minY: 0,
+                                      maxY: 6,
+                                      minX: 0,//sinPoints.first.x,
+                                      maxX: 100,//sinPoints.last.x,
+                                      lineTouchData: const LineTouchData(
+                                          enabled: true
                                       ),
-                                      rightTitles: AxisTitles(
-                                          sideTitles: SideTitles(showTitles: false)
+                                      clipData: const FlClipData.all(),
+                                      gridData: const FlGridData(
+                                        show: true,
+                                        drawVerticalLine: true,
                                       ),
-                                      bottomTitles: AxisTitles(
-                                          sideTitles: SideTitles(
-                                              showTitles: true,
-                                              reservedSize: 30
-                                          )
-                                      ),
-                                      leftTitles: AxisTitles(
-                                          sideTitles: SideTitles(
-                                              showTitles: true,
-                                              reservedSize: 40
-                                          )
+                                      borderData: FlBorderData(show: true),
+                                      lineBarsData: [
+                                        graphLine(volFlowColdPlot, Colors.blue),
+                                      ],
+                                      titlesData: const FlTitlesData(
+                                        topTitles: AxisTitles(
+                                            sideTitles: SideTitles(showTitles: false)
+                                        ),
+                                        rightTitles: AxisTitles(
+                                            sideTitles: SideTitles(showTitles: false)
+                                        ),
+                                        bottomTitles: AxisTitles(
+                                            sideTitles: SideTitles(
+                                                showTitles: true,
+                                                reservedSize: 30
+                                            )
+                                        ),
+                                        leftTitles: AxisTitles(
+                                            sideTitles: SideTitles(
+                                                showTitles: true,
+                                                reservedSize: 40
+                                            )
+                                        ),
                                       ),
                                     ),
                                   ),
-                                ),
-                              ):
-                              Container(),
-                            ],
-                          ),
-                          const Padding(
-                            padding: EdgeInsets.only(top:8.0),
-                            child: Text(
-                              'Time (s)', // Rotated Y-axis title
-                              style: TextStyle(
-                                  fontSize: 16,
-                                  letterSpacing: 1.2
-                              ),
+                                ):
+                                Container(),
+                              ],
                             ),
-                          ),
-                          const Padding(
-                            padding: EdgeInsets.only(top: 8.0, bottom: 8.0),
-                            child: Text(
-                              'Hot Stream Outlet Temperature',
-                              style: TextStyle(
-                                  fontSize: 20
-                              ),
-                            ),
-                          ),
-                          Row(
-                            children: [
-                              const RotatedBox(
-                                quarterTurns: -1,
-                                child: Text(
-                                  'Temperature (C)', // Rotated Y-axis title
-                                  style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
+                            const Padding(
+                              padding: EdgeInsets.only(top:8.0,),
+                              child: Text(
+                                'Time (s)', // Rotated Y-axis title
+                                style: TextStyle(
+                                    fontSize: 16,
+                                    letterSpacing: 1.2
                                 ),
                               ),
-                              cosPoints.isNotEmpty ?
-                              SizedBox(
-                                height: currentHeight/4,
-                                width: currentWidth/5,
-                                child: LineChart(
-                                  LineChartData(
-                                    minY: 20,
-                                    maxY: 70,
-                                    minX: 0,//sinPoints.first.x,
-                                    maxX: 100,//sinPoints.last.x,
-                                    lineTouchData: const LineTouchData(
-                                        enabled: true
-                                    ),
-                                    clipData: const FlClipData.all(),
-                                    gridData: const FlGridData(
-                                      show: true,
-                                      drawVerticalLine: true,
-                                    ),
-                                    borderData: FlBorderData(show: true),
-                                    lineBarsData: [
-                                      graphLine(thOutletPlot, Colors.red),
-                                    ],
-                                    titlesData: const FlTitlesData(
-                                      topTitles: AxisTitles(
-                                          sideTitles: SideTitles(showTitles: false)
+                            ),
+                            const Padding(
+                              padding: EdgeInsets.only(top:8.0, bottom: 8.0),
+                              child: Text(
+                                'Cold Stream Inlet Temperature',
+                                style: TextStyle(
+                                    fontSize: 20
+                                ),
+                              ),
+                            ),
+                            Row(
+                              children: [
+                                const RotatedBox(
+                                  quarterTurns: -1,
+                                  child: Text(
+                                    'Temperature (C)', // Rotated Y-axis title
+                                    style: TextStyle(fontSize: 16,),
+                                  ),
+                                ),
+                                cosPoints.isNotEmpty ?
+                                SizedBox(
+                                  height: currentHeight/4,
+                                  width: currentWidth/5,
+                                  child: LineChart(
+                                    LineChartData(
+                                      minY: 20,
+                                      maxY: 70,
+                                      minX: 0,//sinPoints.first.x,
+                                      maxX: 100,//sinPoints.last.x,
+                                      lineTouchData: const LineTouchData(
+                                          enabled: true
                                       ),
-                                      rightTitles: AxisTitles(
-                                          sideTitles: SideTitles(showTitles: false)
+                                      clipData: const FlClipData.all(),
+                                      gridData: const FlGridData(
+                                        show: true,
+                                        drawVerticalLine: true,
                                       ),
-                                      bottomTitles: AxisTitles(
-                                          sideTitles: SideTitles(
-                                              showTitles: true,
-                                              reservedSize: 30
-                                          )
-                                      ),
-                                      leftTitles: AxisTitles(
-                                          sideTitles: SideTitles(
-                                              showTitles: true,
-                                              reservedSize: 40
-                                          )
+                                      borderData: FlBorderData(show: true),
+                                      lineBarsData: [
+                                        graphLine(tcFullPlot, Colors.blue),
+                                      ],
+                                      titlesData: const FlTitlesData(
+                                        topTitles: AxisTitles(
+                                            sideTitles: SideTitles(showTitles: false)
+                                        ),
+                                        rightTitles: AxisTitles(
+                                            sideTitles: SideTitles(showTitles: false)
+                                        ),
+                                        bottomTitles: AxisTitles(
+                                            sideTitles: SideTitles(
+                                                showTitles: true,
+                                                reservedSize: 30
+                                            )
+                                        ),
+                                        leftTitles: AxisTitles(
+                                            sideTitles: SideTitles(
+                                                showTitles: true,
+                                                reservedSize: 40
+                                            )
+                                        ),
                                       ),
                                     ),
                                   ),
-                                ),
-                              ):
-                              Container(),
-                            ],
-                          ),
-                          const Padding(
-                            padding: EdgeInsets.only(top:8.0),
-                            child: Text(
-                              'Time (s)', // Rotated Y-axis title
-                              style: TextStyle(
-                                  fontSize: 16,
-                                  letterSpacing: 1.2
-                              ),
+                                ):
+                                Container(),
+                              ],
                             ),
-                          ),
-                        ],
-                      ),
-                      const SizedBox(width: 36.0,),
-                      Column(
-                        crossAxisAlignment: CrossAxisAlignment.center,
-                        children: [
-                          const Padding(
-                            padding: EdgeInsets.all(24.0),
-                            child: Text(
-                              'Cold Stream Flowrate',
-                              style: TextStyle(
-                                  fontSize: 20
-                              ),
-                            ),
-                          ),
-                          Row(
-                            children: [
-                              const RotatedBox(
-                                quarterTurns: -1,
-                                child: Text(
-                                  'Flowrate (L/min)', // Rotated Y-axis title
-                                  style: TextStyle(fontSize: 16,),
+                            const Padding(
+                              padding: EdgeInsets.only(top:8.0),
+                              child: Text(
+                                'Time (s)', // Rotated Y-axis title
+                                style: TextStyle(
+                                    fontSize: 16,
+                                    fontWeight: FontWeight.bold,
+                                    letterSpacing: 1.2
                                 ),
                               ),
-                              cosPoints.isNotEmpty ?
-                              SizedBox(
-                                height: currentHeight/4,
-                                width: currentWidth/5,
-                                child: LineChart(
-                                  LineChartData(
-                                    minY: 0,
-                                    maxY: 6,
-                                    minX: 0,//sinPoints.first.x,
-                                    maxX: 100,//sinPoints.last.x,
-                                    lineTouchData: const LineTouchData(
-                                        enabled: true
-                                    ),
-                                    clipData: const FlClipData.all(),
-                                    gridData: const FlGridData(
-                                      show: true,
-                                      drawVerticalLine: true,
-                                    ),
-                                    borderData: FlBorderData(show: true),
-                                    lineBarsData: [
-                                      graphLine(volFlowColdPlot, Colors.blue),
-                                    ],
-                                    titlesData: const FlTitlesData(
-                                      topTitles: AxisTitles(
-                                          sideTitles: SideTitles(showTitles: false)
+                            ),
+                            const Padding(
+                              padding: EdgeInsets.only(top:8.0, bottom: 8.0),
+                              child: Text(
+                                'Cold Stream Outlet Temperature',
+                                style: TextStyle(
+                                    fontSize: 20
+                                ),
+                              ),
+                            ),
+                            Row(
+                              children: [
+                                const RotatedBox(
+                                  quarterTurns: -1,
+                                  child: Text(
+                                    'Temperature (C)', // Rotated Y-axis title
+                                    style: TextStyle(fontSize: 16,),
+                                  ),
+                                ),
+                                cosPoints.isNotEmpty ?
+                                SizedBox(
+                                  height: currentHeight/4,
+                                  width: currentWidth/5,
+                                  child: LineChart(
+                                    LineChartData(
+                                      minY: 20,
+                                      maxY: 70,
+                                      minX: 0,//sinPoints.first.x,
+                                      maxX: 100,//sinPoints.last.x,
+                                      lineTouchData: const LineTouchData(
+                                          enabled: true
                                       ),
-                                      rightTitles: AxisTitles(
-                                          sideTitles: SideTitles(showTitles: false)
+                                      clipData: const FlClipData.all(),
+                                      gridData: const FlGridData(
+                                        show: true,
+                                        drawVerticalLine: true,
                                       ),
-                                      bottomTitles: AxisTitles(
-                                          sideTitles: SideTitles(
-                                              showTitles: true,
-                                              reservedSize: 30
-                                          )
-                                      ),
-                                      leftTitles: AxisTitles(
-                                          sideTitles: SideTitles(
-                                              showTitles: true,
-                                              reservedSize: 40
-                                          )
+                                      borderData: FlBorderData(show: true),
+                                      lineBarsData: [
+                                        graphLine(tcOutletPlot, Colors.blue),
+                                      ],
+                                      titlesData: const FlTitlesData(
+                                        topTitles: AxisTitles(
+                                            sideTitles: SideTitles(showTitles: false)
+                                        ),
+                                        rightTitles: AxisTitles(
+                                            sideTitles: SideTitles(showTitles: false)
+                                        ),
+                                        bottomTitles: AxisTitles(
+                                            sideTitles: SideTitles(
+                                                showTitles: true,
+                                                reservedSize: 30
+                                            )
+                                        ),
+                                        leftTitles: AxisTitles(
+                                            sideTitles: SideTitles(
+                                                showTitles: true,
+                                                reservedSize: 40
+                                            )
+                                        ),
                                       ),
                                     ),
                                   ),
-                                ),
-                              ):
-                              Container(),
-                            ],
-                          ),
-                          const Padding(
-                            padding: EdgeInsets.only(top:8.0,),
-                            child: Text(
-                              'Time (s)', // Rotated Y-axis title
-                              style: TextStyle(
-                                  fontSize: 16,
-                                  letterSpacing: 1.2
-                              ),
+                                ) :
+                                Container(),
+                              ],
                             ),
-                          ),
-                          const Padding(
-                            padding: EdgeInsets.only(top:8.0, bottom: 8.0),
-                            child: Text(
-                              'Cold Stream Inlet Temperature',
-                              style: TextStyle(
-                                  fontSize: 20
-                              ),
-                            ),
-                          ),
-                          Row(
-                            children: [
-                              const RotatedBox(
-                                quarterTurns: -1,
-                                child: Text(
-                                  'Temperature (C)', // Rotated Y-axis title
-                                  style: TextStyle(fontSize: 16,),
+                            const Padding(
+                              padding: EdgeInsets.only(top:8.0, bottom: 24.0),
+                              child: Text(
+                                'Time (s)', // Rotated Y-axis title
+                                style: TextStyle(
+                                    fontSize: 16,
+                                    fontWeight: FontWeight.bold,
+                                    letterSpacing: 1.2
                                 ),
                               ),
-                              cosPoints.isNotEmpty ?
-                              SizedBox(
-                                height: currentHeight/4,
-                                width: currentWidth/5,
-                                child: LineChart(
-                                  LineChartData(
-                                    minY: 20,
-                                    maxY: 70,
-                                    minX: 0,//sinPoints.first.x,
-                                    maxX: 100,//sinPoints.last.x,
-                                    lineTouchData: const LineTouchData(
-                                        enabled: true
-                                    ),
-                                    clipData: const FlClipData.all(),
-                                    gridData: const FlGridData(
-                                      show: true,
-                                      drawVerticalLine: true,
-                                    ),
-                                    borderData: FlBorderData(show: true),
-                                    lineBarsData: [
-                                      graphLine(tcFullPlot, Colors.blue),
-                                    ],
-                                    titlesData: const FlTitlesData(
-                                      topTitles: AxisTitles(
-                                          sideTitles: SideTitles(showTitles: false)
-                                      ),
-                                      rightTitles: AxisTitles(
-                                          sideTitles: SideTitles(showTitles: false)
-                                      ),
-                                      bottomTitles: AxisTitles(
-                                          sideTitles: SideTitles(
-                                              showTitles: true,
-                                              reservedSize: 30
-                                          )
-                                      ),
-                                      leftTitles: AxisTitles(
-                                          sideTitles: SideTitles(
-                                              showTitles: true,
-                                              reservedSize: 40
-                                          )
-                                      ),
-                                    ),
-                                  ),
-                                ),
-                              ):
-                              Container(),
-                            ],
-                          ),
-                          const Padding(
-                            padding: EdgeInsets.only(top:8.0),
-                            child: Text(
-                              'Time (s)', // Rotated Y-axis title
-                              style: TextStyle(
-                                  fontSize: 16,
-                                  fontWeight: FontWeight.bold,
-                                  letterSpacing: 1.2
-                              ),
                             ),
-                          ),
-                          const Padding(
-                            padding: EdgeInsets.only(top:8.0, bottom: 8.0),
-                            child: Text(
-                              'Cold Stream Outlet Temperature',
-                              style: TextStyle(
-                                  fontSize: 20
-                              ),
-                            ),
-                          ),
-                          Row(
-                            children: [
-                              const RotatedBox(
-                                quarterTurns: -1,
-                                child: Text(
-                                  'Temperature (C)', // Rotated Y-axis title
-                                  style: TextStyle(fontSize: 16,),
-                                ),
-                              ),
-                              cosPoints.isNotEmpty ?
-                              SizedBox(
-                                height: currentHeight/4,
-                                width: currentWidth/5,
-                                child: LineChart(
-                                  LineChartData(
-                                    minY: 20,
-                                    maxY: 70,
-                                    minX: 0,//sinPoints.first.x,
-                                    maxX: 100,//sinPoints.last.x,
-                                    lineTouchData: const LineTouchData(
-                                        enabled: true
-                                    ),
-                                    clipData: const FlClipData.all(),
-                                    gridData: const FlGridData(
-                                      show: true,
-                                      drawVerticalLine: true,
-                                    ),
-                                    borderData: FlBorderData(show: true),
-                                    lineBarsData: [
-                                      graphLine(tcOutletPlot, Colors.blue),
-                                    ],
-                                    titlesData: const FlTitlesData(
-                                      topTitles: AxisTitles(
-                                          sideTitles: SideTitles(showTitles: false)
-                                      ),
-                                      rightTitles: AxisTitles(
-                                          sideTitles: SideTitles(showTitles: false)
-                                      ),
-                                      bottomTitles: AxisTitles(
-                                          sideTitles: SideTitles(
-                                              showTitles: true,
-                                              reservedSize: 30
-                                          )
-                                      ),
-                                      leftTitles: AxisTitles(
-                                          sideTitles: SideTitles(
-                                              showTitles: true,
-                                              reservedSize: 40
-                                          )
-                                      ),
-                                    ),
-                                  ),
-                                ),
-                              ) :
-                              Container(),
-                            ],
-                          ),
-                          const Padding(
-                            padding: EdgeInsets.only(top:8.0, bottom: 24.0),
-                            child: Text(
-                              'Time (s)', // Rotated Y-axis title
-                              style: TextStyle(
-                                  fontSize: 16,
-                                  fontWeight: FontWeight.bold,
-                                  letterSpacing: 1.2
-                              ),
-                            ),
-                          ),
-                        ],
-                      ),
-                    ],
+                          ],
+                        ),
+                      ],
+                    ),
                   ),
                 ),
               ),

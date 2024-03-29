@@ -27,14 +27,14 @@ class ShareMessageDialog extends StatelessWidget {
       ),
       content: Container(
         constraints: BoxConstraints(
-          minWidth: MediaQuery.of(context).size.width,
+          maxWidth: MediaQuery.of(context).size.width,
         ),
         child: Column(
           mainAxisSize: MainAxisSize.min,
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             Text(
-              '$contentMessage.',
+              contentMessage,
             ),
           ],
         ),

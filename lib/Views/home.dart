@@ -1,7 +1,10 @@
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
+import 'package:provider/provider.dart';
 import 'package:soltwin_se2702/CustomWidget/custom_app_bar.dart';
 import 'package:soltwin_se2702/CustomWidget/custom_coming_soon_card.dart';
+import 'package:soltwin_se2702/Dialogs/share_message_dialog.dart';
+import 'package:soltwin_se2702/Providers/login_provider.dart';
 
 
 class HomePage extends StatefulWidget {
@@ -12,7 +15,6 @@ class HomePage extends StatefulWidget {
 }
 
 class _HomePageState extends State<HomePage> {
-
   @override
   Widget build(BuildContext context) {
     final currentWidth = MediaQuery
@@ -23,6 +25,7 @@ class _HomePageState extends State<HomePage> {
         .of(context)
         .size
         .height;
+    bool isLoggedIn = Provider.of<LoginProvider>(context).isLoggedIn;
     return Scaffold(
       appBar: const CustomAppBar(),
       body: SingleChildScrollView(
@@ -36,7 +39,18 @@ class _HomePageState extends State<HomePage> {
                   Card(
                     elevation: 20,
                     child: InkWell(
-                      onTap: () => context.go('/se2702'),
+                      onTap: () {
+                        if(isLoggedIn){
+                          context.go('/se2702');
+                        }else{
+                          if(!mounted)return;
+                          showDialog(
+                              context: context,
+                              builder: (context) => const ShareMessageDialog(
+                                  contentMessage: 'Please login first before you can access any SOLTWIN Modelling.'
+                              ));
+                        }
+                      },
                       borderRadius: const BorderRadius.all(Radius.circular(20)),
                       child: SizedBox(
                         width: currentWidth / 5,
@@ -60,7 +74,18 @@ class _HomePageState extends State<HomePage> {
                   Card(
                     elevation: 20,
                     child: InkWell(
-                      onTap: () => context.go('/he104'),
+                      onTap: () {
+                        if(isLoggedIn){
+                          context.go('/he104');
+                        }else{
+                          if(!mounted)return;
+                          showDialog(
+                              context: context,
+                              builder: (context) => const ShareMessageDialog(
+                                  contentMessage: 'Please login first before you can access any SOLTWIN Modelling.'
+                              ));
+                        }
+                      },
                       borderRadius: const BorderRadius.all(Radius.circular(20)),
                       child: SizedBox(
                         width: currentWidth / 5,

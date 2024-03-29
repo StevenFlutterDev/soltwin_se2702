@@ -25,12 +25,21 @@ class _SE2702State extends State<SE2702> {
   double maxX = 50;
 
   void startWSConnections() {
-    webSocketServices = WebSocketServices('ws://192.168.2.30:3001');
-    webSocketServices?.onMessageReceived = (message) {
-      //print('WebSocket message: ${message.toString()}');
-      var jsonData = jsonDecode(message);
-      processWSData(jsonData);
-    };
+    try{
+      webSocketServices = WebSocketServices('ws://192.168.1.102:3003');
+      webSocketServices?.onMessageReceived = (message) {
+        //print('WebSocket message: ${message.toString()}');
+        var jsonData = jsonDecode(message);
+        processWSData(jsonData);
+      };
+    }catch(e){
+      if(!mounted)return;
+      showDialog(
+          context: context,
+          builder: (context) => const ShareMessageDialog(
+              contentMessage: 'Unable to communicate with the server. Please try again later.'
+          ));
+    }
   }
 
   void stopWSConnections() {
@@ -114,6 +123,7 @@ class _SE2702State extends State<SE2702> {
     provider.setTankLevel(2, currentLevel); // Update the level in the provider
 
     if (shouldAnimate) {
+      if(!mounted)return;
       Future.delayed(const Duration(milliseconds: 100), () => updateWaterLevel()); // Continue updating
     }
   }
@@ -814,9 +824,7 @@ class _SE2702State extends State<SE2702> {
                                       ),
                                       onSubmitted: (String value) async {
                                         try{
-                                          await apiServices.setPID(
-                                              'updatePID', 'P',
-                                              double.parse(value));
+                                          await apiServices.setValueCommand('se270',null,'updatePID', 'P', double.parse(value));
                                         }catch(e){
                                           if(!mounted)return;
                                           showDialog(
@@ -848,7 +856,8 @@ class _SE2702State extends State<SE2702> {
                                       ),
                                       onSubmitted: (String value) async {
                                         try{
-                                          await apiServices.setPID(
+                                          await apiServices.setValueCommand(
+                                            'se270',null,
                                             'updatePID', 'I',
                                             double.parse(value));
                                         }catch(e){
@@ -882,7 +891,8 @@ class _SE2702State extends State<SE2702> {
                                       ),
                                       onSubmitted: (String value) async {
                                         try{
-                                          await apiServices.setPID(
+                                          await apiServices.setValueCommand(
+                                              'se270',null,
                                               'updatePID', 'D',
                                               double.parse(value));
                                         }catch(e){
@@ -925,7 +935,8 @@ class _SE2702State extends State<SE2702> {
                                       ),
                                       onSubmitted: (String value) async {
                                         try{
-                                          await apiServices.setPID(
+                                          await apiServices.setValueCommand(
+                                              'se270',null,
                                               'changeSetPoint', 'setPoint',
                                               double.parse(value));
                                         }catch(e){
@@ -959,7 +970,8 @@ class _SE2702State extends State<SE2702> {
                                       ),
                                       onSubmitted: (String value) async {
                                         try{
-                                          await apiServices.setPID(
+                                          await apiServices.setValueCommand(
+                                              'se270',null,
                                               'updateConstant',
                                               'constantValue',
                                               double.parse(value));
