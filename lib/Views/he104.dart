@@ -19,12 +19,24 @@ class _HE104State extends State<HE104> {
   final APIServices apiServices = APIServices();
   String modelMode = ' ';
 
+  //CO-Current Value Settings
+  final volFlowHotCO = TextEditingController();
+  final volFlowColdCO = TextEditingController();
+  final thInletCO = TextEditingController();
+  final tcInletCO = TextEditingController();
+
+  //Counter Current Value Settings
+  final volFlowHotCounter = TextEditingController();
+  final volFlowColdCounter = TextEditingController();
+  final thInletCounter = TextEditingController();
+  final tcInletCounter = TextEditingController();
+
   WebSocketServices? webSocketServices;
   double maxX = 50;
 
   void startWSConnections() {
     try{
-      webSocketServices = WebSocketServices('ws://192.168.1.102:3003');
+      webSocketServices = WebSocketServices('ws://192.168.2.30:3003');
       webSocketServices?.onMessageReceived = (message) {
         //print('WebSocket message: ${message.toString()}');
         var jsonData = jsonDecode(message);
@@ -100,9 +112,6 @@ class _HE104State extends State<HE104> {
   void initState() {
     // TODO: implement initState
     super.initState();
-    /*setState(() {
-      cosPoints.add(const FlSpot(0, 0));
-    });*/
   }
 
   @override
@@ -351,10 +360,318 @@ class _HE104State extends State<HE104> {
                               ),
                               const SizedBox(height: 28,),
                               const Text(
-                                'PID Control',
+                                'CO-Current Settings',
                                 style: TextStyle(
                                     fontSize: 20
                                 ),
+                              ),
+                              const SizedBox(height: 12,),
+                              Row(
+                                crossAxisAlignment: CrossAxisAlignment
+                                    .center,
+                                mainAxisAlignment: MainAxisAlignment
+                                    .start,
+                                mainAxisSize: MainAxisSize.max,
+                                children: [
+                                  const Text(
+                                    'Vol Flow Hot: ',
+                                  ),
+                                  SizedBox(
+                                    width: 100,
+                                    child: TextField(
+                                      controller: volFlowHotCO,
+                                      keyboardType: const TextInputType
+                                          .numberWithOptions(
+                                        decimal: true,
+                                      ),
+                                      decoration: const InputDecoration(
+                                        border: UnderlineInputBorder(
+                                            borderSide: BorderSide()
+                                        ),
+                                        isDense: true,
+                                        filled: true,
+                                        //labelText: '  P Value',
+                                      ),
+                                      onSubmitted: (String value) async {
+                                        try{
+                                          await apiServices.setValueCommand(
+                                              'he104','co',
+                                              'updateValue', 'VolFlowHot_mpvar',
+                                              double.parse(value));
+                                        }catch(e){
+                                          if(!mounted)return;
+                                          showDialog(
+                                              context: context,
+                                              builder: (context) => const ShareMessageDialog(
+                                                  contentMessage: 'Unable to communicate with the server. Please try again later.'
+                                              ));
+                                        }
+                                      },
+                                    ),
+                                  ),
+                                  const SizedBox(width: 12,),
+                                  const Text(
+                                    'Vol Flow Cold:  ',
+                                  ),
+                                  SizedBox(
+                                    width: 100,
+                                    child: TextField(
+                                      controller: volFlowColdCO,
+                                      keyboardType: const TextInputType
+                                          .numberWithOptions(
+                                        decimal: true,
+                                      ),
+                                      decoration: const InputDecoration(
+                                        border: UnderlineInputBorder(),
+                                        isDense: true,
+                                        filled: true,
+                                        //labelText: '  P Value',
+                                      ),
+                                      onSubmitted: (String value) async {
+                                        try{
+                                          await apiServices.setValueCommand(
+                                              'he104','co',
+                                              'updateValue', 'VolFlowCold_mpvar',
+                                              double.parse(value));
+                                        }catch(e){
+                                          if(!mounted)return;
+                                          showDialog(
+                                              context: context,
+                                              builder: (context) => const ShareMessageDialog(
+                                                  contentMessage: 'Unable to communicate with the server. Please try again later.'
+                                              ));
+                                        }
+                                      },
+                                    ),
+                                  ),
+                                  const SizedBox(width: 12,),
+                                  const Text(
+                                    'TH Inlet: ',
+                                  ),
+                                  SizedBox(
+                                    width: 100,
+                                    child: TextField(
+                                      controller: thInletCO,
+                                      keyboardType: const TextInputType
+                                          .numberWithOptions(
+                                        decimal: true,
+                                      ),
+                                      decoration: const InputDecoration(
+                                        border: UnderlineInputBorder(),
+                                        isDense: true,
+                                        filled: true,
+                                        //labelText: '  P Value',
+                                      ),
+                                      onSubmitted: (String value) async {
+                                        try{
+                                          await apiServices.setValueCommand(
+                                              'he104','co',
+                                              'updateValue', 'Th_inlet_mpvar',
+                                              double.parse(value));
+                                        }catch(e){
+                                          if(!mounted)return;
+                                          showDialog(
+                                              context: context,
+                                              builder: (context) => const ShareMessageDialog(
+                                                  contentMessage: 'Unable to communicate with the server. Please try again later.'
+                                              ));
+                                        }
+                                      },
+                                    ),
+                                  ),
+                                  const SizedBox(width: 12,),
+                                  const Text(
+                                    'TC Inlet: ',
+                                  ),
+                                  SizedBox(
+                                    width: 100,
+                                    child: TextField(
+                                      controller: tcInletCO,
+                                      keyboardType: const TextInputType
+                                          .numberWithOptions(
+                                        decimal: true,
+                                      ),
+                                      decoration: const InputDecoration(
+                                        border: UnderlineInputBorder(),
+                                        isDense: true,
+                                        filled: true,
+                                        //labelText: '  P Value',
+                                      ),
+                                      onSubmitted: (String value) async {
+                                        try{
+                                          await apiServices.setValueCommand(
+                                              'he104','co',
+                                              'updateValue', 'Tc_inlet_mpvar',
+                                              double.parse(value));
+                                        }catch(e){
+                                          if(!mounted)return;
+                                          showDialog(
+                                              context: context,
+                                              builder: (context) => const ShareMessageDialog(
+                                                  contentMessage: 'Unable to communicate with the server. Please try again later.'
+                                              ));
+                                        }
+                                      },
+                                    ),
+                                  )
+                                ],
+                              ),
+                              const SizedBox(height: 12,),
+                              const Text(
+                                'Counter-Current Settings',
+                                style: TextStyle(
+                                    fontSize: 20
+                                ),
+                              ),
+                              const SizedBox(height: 12,),
+                              Row(
+                                crossAxisAlignment: CrossAxisAlignment
+                                    .center,
+                                mainAxisAlignment: MainAxisAlignment
+                                    .start,
+                                mainAxisSize: MainAxisSize.max,
+                                children: [
+                                  const Text(
+                                    'Vol Flow Hot: ',
+                                  ),
+                                  SizedBox(
+                                    width: 100,
+                                    child: TextField(
+                                      controller: volFlowHotCounter,
+                                      keyboardType: const TextInputType
+                                          .numberWithOptions(
+                                        decimal: true,
+                                      ),
+                                      decoration: const InputDecoration(
+                                        border: UnderlineInputBorder(
+                                            borderSide: BorderSide()
+                                        ),
+                                        isDense: true,
+                                        filled: true,
+                                        //labelText: '  P Value',
+                                      ),
+                                      onSubmitted: (String value) async {
+                                        try{
+                                          await apiServices.setValueCommand(
+                                              'he104','counter',
+                                              'updateValue', 'VolFlowHot_mpvar',
+                                              double.parse(value));
+                                        }catch(e){
+                                          if(!mounted)return;
+                                          showDialog(
+                                              context: context,
+                                              builder: (context) => const ShareMessageDialog(
+                                                  contentMessage: 'Unable to communicate with the server. Please try again later.'
+                                              ));
+                                        }
+                                      },
+                                    ),
+                                  ),
+                                  const SizedBox(width: 12,),
+                                  const Text(
+                                    'Vol Flow Cold:  ',
+                                  ),
+                                  SizedBox(
+                                    width: 100,
+                                    child: TextField(
+                                      controller: volFlowColdCounter,
+                                      keyboardType: const TextInputType
+                                          .numberWithOptions(
+                                        decimal: true,
+                                      ),
+                                      decoration: const InputDecoration(
+                                        border: UnderlineInputBorder(),
+                                        isDense: true,
+                                        filled: true,
+                                        //labelText: '  P Value',
+                                      ),
+                                      onSubmitted: (String value) async {
+                                        try{
+                                          await apiServices.setValueCommand(
+                                              'he104','counter',
+                                              'updateValue', 'VolFlowCold_mpvar',
+                                              double.parse(value));
+                                        }catch(e){
+                                          if(!mounted)return;
+                                          showDialog(
+                                              context: context,
+                                              builder: (context) => const ShareMessageDialog(
+                                                  contentMessage: 'Unable to communicate with the server. Please try again later.'
+                                              ));
+                                        }
+                                      },
+                                    ),
+                                  ),
+                                  const SizedBox(width: 12,),
+                                  const Text(
+                                    'TH Inlet: ',
+                                  ),
+                                  SizedBox(
+                                    width: 100,
+                                    child: TextField(
+                                      controller: thInletCounter,
+                                      keyboardType: const TextInputType
+                                          .numberWithOptions(
+                                        decimal: true,
+                                      ),
+                                      decoration: const InputDecoration(
+                                        border: UnderlineInputBorder(),
+                                        isDense: true,
+                                        filled: true,
+                                      ),
+                                      onSubmitted: (String value) async {
+                                        try{
+                                          await apiServices.setValueCommand(
+                                              'he104','counter',
+                                              'updateValue', 'Th_inlet_mpvar',
+                                              double.parse(value));
+                                        }catch(e){
+                                          if(!mounted)return;
+                                          showDialog(
+                                              context: context,
+                                              builder: (context) => const ShareMessageDialog(
+                                                  contentMessage: 'Unable to communicate with the server. Please try again later.'
+                                              ));
+                                        }
+                                      },
+                                    ),
+                                  ),
+                                  const SizedBox(width: 12,),
+                                  const Text(
+                                    'TC Inlet: ',
+                                  ),
+                                  SizedBox(
+                                    width: 100,
+                                    child: TextField(
+                                      controller: tcInletCounter,
+                                      keyboardType: const TextInputType
+                                          .numberWithOptions(
+                                        decimal: true,
+                                      ),
+                                      decoration: const InputDecoration(
+                                        border: UnderlineInputBorder(),
+                                        isDense: true,
+                                        filled: true,
+                                        //labelText: '  P Value',
+                                      ),
+                                      onSubmitted: (String value) async {
+                                        try{
+                                          await apiServices.setValueCommand(
+                                              'he104','counter',
+                                              'updateValue', 'Tc_inlet_mpvar',
+                                              double.parse(value));
+                                        }catch(e){
+                                          if(!mounted)return;
+                                          showDialog(
+                                              context: context,
+                                              builder: (context) => const ShareMessageDialog(
+                                                  contentMessage: 'Unable to communicate with the server. Please try again later.'
+                                              ));
+                                        }
+                                      },
+                                    ),
+                                  )
+                                ],
                               ),
                               const SizedBox(height: 12,),
                             ],

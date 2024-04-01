@@ -6,7 +6,7 @@ import 'package:soltwin_se2702/Services/getset_preferences.dart';
 import 'package:soltwin_se2702/main.dart';
 
 class APIServices{
-  final String host = 'http://192.168.1.102:8000';
+  final String host = 'http://192.168.2.30:8000';
   //late String _sessionID;
 
   // You can set the session ID through the constructor or a separate method

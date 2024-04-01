@@ -26,7 +26,7 @@ class _SE2702State extends State<SE2702> {
 
   void startWSConnections() {
     try{
-      webSocketServices = WebSocketServices('ws://192.168.1.102:3003');
+      webSocketServices = WebSocketServices('ws://192.168.2.30:3003');
       webSocketServices?.onMessageReceived = (message) {
         //print('WebSocket message: ${message.toString()}');
         var jsonData = jsonDecode(message);
@@ -983,7 +983,6 @@ class _SE2702State extends State<SE2702> {
                                                   contentMessage: 'Unable to communicate with the server. Please try again later.'
                                               ));
                                         }
-
                                       },
                                     ),
                                   )
