@@ -70,6 +70,7 @@ class CustomAppBar extends StatelessWidget implements PreferredSizeWidget{
           child: TextButton(
               onPressed: (){
                 showDialog(context: context, builder: (context)=>const LogoutDialog());
+                context.go('/');
               },
               child: const Text(
                 'Logout',

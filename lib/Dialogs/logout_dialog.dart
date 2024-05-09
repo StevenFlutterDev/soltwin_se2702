@@ -40,7 +40,7 @@ class _LogoutDialogState extends State<LogoutDialog> {
             );
             Provider.of<LoginProvider>(context, listen: false).setUserLogin(false); //Set login to false
             setRememberMe(false, '', ''); //Set (Remember me, Username, Password) to (False, null, null)
-            setUserToken('Token'); //Remove User Token after logout.
+            setUserDetails('Token','UserID', '0'); //Remove User Token after logout.
             Navigator.pop(context);
           },
           style: ButtonStyle(

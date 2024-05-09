@@ -7,6 +7,7 @@ import 'package:soltwin_se2702/Dialogs/share_message_dialog.dart';
 import 'package:soltwin_se2702/Services/rest_api.dart';
 import 'package:soltwin_se2702/Services/websocket.dart';
 
+
 class HE104 extends StatefulWidget {
   const HE104({Key? key}) : super(key: key);
 
@@ -15,28 +16,42 @@ class HE104 extends StatefulWidget {
 }
 
 class _HE104State extends State<HE104> {
-  final cosPoints = <FlSpot>[];
   final APIServices apiServices = APIServices();
   String modelMode = ' ';
 
   //CO-Current Value Settings
-  final volFlowHotCO = TextEditingController();
-  final volFlowColdCO = TextEditingController();
-  final thInletCO = TextEditingController();
-  final tcInletCO = TextEditingController();
+  final volFlowHotCO = TextEditingController(text: '2');
+  final volFlowColdCO = TextEditingController(text: '1');
+  final thInletCO = TextEditingController(text: '50');
+  final tcInletCO = TextEditingController(text: '29.9');
 
   //Counter Current Value Settings
-  final volFlowHotCounter = TextEditingController();
-  final volFlowColdCounter = TextEditingController();
-  final thInletCounter = TextEditingController();
-  final tcInletCounter = TextEditingController();
+  final volFlowHotCounter = TextEditingController(text: '2');
+  final volFlowColdCounter = TextEditingController(text: '3');
+  final thInletCounter = TextEditingController(text: '45');
+  final tcInletCounter = TextEditingController(text: '29.3');
 
   WebSocketServices? webSocketServices;
   double maxX = 50;
 
+  //fl_chart settings
+  final limitCount = 1000;
+  var thPartialPlot = <FlSpot>[];
+  var tcPartialPlot = <FlSpot>[];
+  var volFlowHotPlot = <FlSpot>[];
+  var volFlowColdPlot = <FlSpot>[];
+  var thFullPlot = <FlSpot>[];
+  var tcFullPlot = <FlSpot>[];
+  var thOutletPlot = <FlSpot>[];
+  var tcOutletPlot = <FlSpot>[];
+
+  //Display API status message
+  String statusMessage = '';
+  bool isShowingMessage = false;
+
   void startWSConnections() {
     try{
-      webSocketServices = WebSocketServices('ws://192.168.2.30:3003');
+      webSocketServices = WebSocketServices('ws://127.0.0.1:3003');
       webSocketServices?.onMessageReceived = (message) {
         //print('WebSocket message: ${message.toString()}');
         var jsonData = jsonDecode(message);
@@ -90,28 +105,18 @@ class _HE104State extends State<HE104> {
     });
   }
 
-  //fl_chart settings
-  final limitCount = 1000;
-  var thPartialPlot = <FlSpot>[];
-  var tcPartialPlot = <FlSpot>[];
-  var volFlowHotPlot = <FlSpot>[];
-  var volFlowColdPlot = <FlSpot>[];
-  var thFullPlot = <FlSpot>[];
-  var tcFullPlot = <FlSpot>[];
-  var thOutletPlot = <FlSpot>[];
-  var tcOutletPlot = <FlSpot>[];
-
-  double xValue = 0;
-  double step = 0.05;
-
-  //Display API status message
-  String statusMessage = '';
-  bool isShowingMessage = false;
 
   @override
   void initState() {
     // TODO: implement initState
     super.initState();
+    try{
+      APIServices().runHE104CounterModel();
+    }catch(e){
+      showDialog(context: context, builder: (context) => ShareMessageDialog(
+          contentMessage: 'Failed to start HE104 CO Current Model. Error message: ${e.toString()}'
+      ));
+    }
   }
 
   @override
@@ -175,8 +180,13 @@ class _HE104State extends State<HE104> {
                                   ElevatedButton(
                                     onPressed: ()async{
                                       try{
-                                        bool result = await apiServices.matlabControl('he104', 'co', 'run');
-                                        if(result){
+                                        //bool result = await apiServices.matlabControl('he104', 'co', 'run');
+                                        setState(() {
+                                          modelMode = 'CO-Current';
+                                        });
+                                        //await apiServices.matlabControl('he104', 'counter', 'stop');
+                                        //bool result = await apiServices.runHE104COModel();
+                                        /*if(result){
                                           setState(() {
                                             modelMode = 'CO-Current';
                                           });
@@ -184,7 +194,7 @@ class _HE104State extends State<HE104> {
                                           setState(() {
                                             modelMode = ' ';
                                           });
-                                        }
+                                        }*/
                                       }catch(e){
                                         if(!mounted)return;
                                         showDialog(
@@ -215,7 +225,11 @@ class _HE104State extends State<HE104> {
                                   ElevatedButton(
                                       onPressed: ()async{
                                         try{
-                                          bool result = await apiServices.matlabControl('he104', 'counter', 'run');
+                                          setState(() {
+                                            modelMode = 'Counter Current';
+                                          });
+                                          /*await apiServices.matlabControl('he104', 'co', 'stop');
+                                          bool result = await apiServices.runHE104CounterModel();
                                           if(result){
                                             setState(() {
                                               modelMode = 'Counter Current';
@@ -231,7 +245,7 @@ class _HE104State extends State<HE104> {
                                                   contentMessage: 'Not able to communicate to the server. Please try again later'
                                               );
                                             });
-                                          }
+                                          }*/
                                         }catch(e){
                                           if(!mounted)return;
                                           showDialog(
@@ -308,7 +322,23 @@ class _HE104State extends State<HE104> {
                                   ElevatedButton(
                                       onPressed: ()async{
                                         try{
-                                          await apiServices.matlabControl('he104', 'co', 'start');
+                                          startWSConnections();
+                                          if(modelMode == 'CO-Current'){
+                                            await apiServices.matlabControl('he104', 'co', 'start');
+                                          }else{
+                                            await apiServices.matlabControl('he104', 'counter', 'start');
+                                          }
+                                          setState(() {
+                                            thPartialPlot = [];
+                                            tcPartialPlot = [];
+                                            volFlowHotPlot = [];
+                                            volFlowColdPlot = [];
+                                            thFullPlot = [];
+                                            tcFullPlot = [];
+                                            thOutletPlot = [];
+                                            tcOutletPlot = [];
+                                            maxX = 50;
+                                          });
                                         }catch(e){
                                           if(!mounted)return;
                                           showDialog(
@@ -334,7 +364,12 @@ class _HE104State extends State<HE104> {
                                   ElevatedButton(
                                       onPressed: ()async{
                                         try{
-                                          await apiServices.matlabControl('he104', 'co', 'stop');
+                                          stopWSConnections();
+                                          if(modelMode == 'CO-Current'){
+                                            await apiServices.matlabControl('he104', 'co', 'stop');
+                                          }else{
+                                            await apiServices.matlabControl('he104', 'counter', 'stop');
+                                          }
                                         }catch(e){
                                           if(!mounted)return;
                                           showDialog(
@@ -682,7 +717,7 @@ class _HE104State extends State<HE104> {
                 ],
               ),
               Visibility(
-                visible: thPartialPlot.isNotEmpty,
+                visible: true,//thPartialPlot.isNotEmpty,
                 child: Padding(
                   padding: const EdgeInsets.all(20),
                   child: Card(
@@ -703,7 +738,7 @@ class _HE104State extends State<HE104> {
                               ),
                             ),
                             //const SizedBox(height: 24,),
-                            cosPoints.isNotEmpty ?
+                            thPartialPlot.isNotEmpty ?
                             Row(
                               children: [
                                 const RotatedBox(
@@ -875,7 +910,7 @@ class _HE104State extends State<HE104> {
                                     style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
                                   ),
                                 ),
-                                cosPoints.isNotEmpty ?
+                                thFullPlot.isNotEmpty ?
                                 SizedBox(
                                   height: currentHeight/4,
                                   width: currentWidth/5,
@@ -951,7 +986,7 @@ class _HE104State extends State<HE104> {
                                     style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
                                   ),
                                 ),
-                                cosPoints.isNotEmpty ?
+                                thOutletPlot.isNotEmpty ?
                                 SizedBox(
                                   height: currentHeight/4,
                                   width: currentWidth/5,
@@ -1033,7 +1068,7 @@ class _HE104State extends State<HE104> {
                                     style: TextStyle(fontSize: 16,),
                                   ),
                                 ),
-                                cosPoints.isNotEmpty ?
+                                volFlowColdPlot.isNotEmpty ?
                                 SizedBox(
                                   height: currentHeight/4,
                                   width: currentWidth/5,
@@ -1109,7 +1144,7 @@ class _HE104State extends State<HE104> {
                                     style: TextStyle(fontSize: 16,),
                                   ),
                                 ),
-                                cosPoints.isNotEmpty ?
+                                tcFullPlot.isNotEmpty ?
                                 SizedBox(
                                   height: currentHeight/4,
                                   width: currentWidth/5,
@@ -1186,7 +1221,7 @@ class _HE104State extends State<HE104> {
                                     style: TextStyle(fontSize: 16,),
                                   ),
                                 ),
-                                cosPoints.isNotEmpty ?
+                                tcOutletPlot.isNotEmpty ?
                                 SizedBox(
                                   height: currentHeight/4,
                                   width: currentWidth/5,

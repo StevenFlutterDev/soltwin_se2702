@@ -25,7 +25,7 @@ class _HomePageState extends State<HomePage> {
         .of(context)
         .size
         .height;
-    bool isLoggedIn = Provider.of<LoginProvider>(context).isLoggedIn;
+    //bool isLoggedIn = Provider.of<LoginProvider>(context).isLoggedIn;
     return Scaffold(
       appBar: const CustomAppBar(),
       body: SingleChildScrollView(
@@ -40,15 +40,15 @@ class _HomePageState extends State<HomePage> {
                     elevation: 20,
                     child: InkWell(
                       onTap: () {
-                        if(isLoggedIn){
+                        if(true){
                           context.go('/se2702');
                         }else{
-                          if(!mounted)return;
+                          /*if(!mounted)return;
                           showDialog(
                               context: context,
                               builder: (context) => const ShareMessageDialog(
                                   contentMessage: 'Please login first before you can access any SOLTWIN Modelling.'
-                              ));
+                              ));*/
                         }
                       },
                       borderRadius: const BorderRadius.all(Radius.circular(20)),
@@ -75,15 +75,15 @@ class _HomePageState extends State<HomePage> {
                     elevation: 20,
                     child: InkWell(
                       onTap: () {
-                        if(isLoggedIn){
+                        if(true){
                           context.go('/he104');
                         }else{
-                          if(!mounted)return;
+                          /*if(!mounted)return;
                           showDialog(
                               context: context,
                               builder: (context) => const ShareMessageDialog(
                                   contentMessage: 'Please login first before you can access any SOLTWIN Modelling.'
-                              ));
+                              ));*/
                         }
                       },
                       borderRadius: const BorderRadius.all(Radius.circular(20)),

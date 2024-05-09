@@ -1,6 +1,8 @@
 
 import 'dart:convert';
+import 'dart:html' as html;
 
+import 'package:csv/csv.dart';
 import 'package:flutter/material.dart';
 import 'package:fl_chart/fl_chart.dart';
 import 'package:provider/provider.dart';
@@ -8,6 +10,7 @@ import 'package:soltwin_se2702/Animation/water_level_animation.dart';
 import 'package:soltwin_se2702/CustomWidget/custom_app_bar.dart';
 import 'package:soltwin_se2702/Dialogs/share_message_dialog.dart';
 import 'package:soltwin_se2702/Providers/water_level_provider.dart';
+import 'package:soltwin_se2702/Services/getset_preferences.dart';
 import 'package:soltwin_se2702/Services/rest_api.dart';
 import 'package:soltwin_se2702/Services/websocket.dart';
 import 'package:lottie/lottie.dart';
@@ -23,10 +26,54 @@ class _SE2702State extends State<SE2702> {
   //Web socket Service
   WebSocketServices? webSocketServices;
   double maxX = 50;
+  double minX = 0;
+
+  //API Service
+  final APIServices apiServices = APIServices();
+
+  //Animation State
+  bool p201Stat = false;
+  bool sv203Stat = false;
+  bool tankFilled = false;
+  bool powerStat = false;
+  bool isFillingTank = false;
+  bool isFillingCylinder = false;
+  bool isDrainingTank = false;
+  bool isDrainingCylinder = false;
+
+  //PID Control and Value
+  String currentMode = 'Manual';
+  String currentStatus = 'Stop';
+  double pvValue = 0.0;
+  double mvValue = 0.0;
+  double svValue = 0.0;
+
+  final kP = TextEditingController(text: '0');
+  final kI = TextEditingController(text: '0');
+  final kD = TextEditingController(text: '0');
+  final svTextController = TextEditingController(text: '0');
+  final mvTextController = TextEditingController(text: '0');
+
+  //fl_chart settings
+  final limitCount = 1000;
+  var svPoints = <FlSpot>[const FlSpot(1.0, 20.0),const FlSpot(2.0, 25.0),const FlSpot(3.0, 30.0),const FlSpot(4.0, 35.0),const FlSpot(5.0, 40.0),const FlSpot(6.0, 45.0),const FlSpot(7.0, 50.0)];
+  var pvPoints = <FlSpot>[const FlSpot(1.0, 50.0),const FlSpot(2.0, 45.0),const FlSpot(3.0, 40.0),const FlSpot(4.0, 35.0),const FlSpot(5.0, 30.0),const FlSpot(6.0, 25.0),const FlSpot(7.0, 20.0)];
+
+  // Prepare the data
+  List<List<dynamic>> csvData = [
+    ['time', 'Setpoint (SV)', 'Process Variable (PV)']  // Headers
+  ];
+
+  double xValue = 0;
+  double step = 0.05;
+
+  //Display API status message
+  String statusMessage = '';
+  bool isShowingMessage = false;
 
   void startWSConnections() {
     try{
-      webSocketServices = WebSocketServices('ws://192.168.2.30:3003');
+      webSocketServices = WebSocketServices('ws://192.168.1.102:3003');
       webSocketServices?.onMessageReceived = (message) {
         //print('WebSocket message: ${message.toString()}');
         var jsonData = jsonDecode(message);
@@ -46,47 +93,39 @@ class _SE2702State extends State<SE2702> {
     webSocketServices?.disconnect();
   }
 
-  void processWSData(var jsonData) {
+  void processWSData(var jsonData) async{
     // Extract data from jsonData and use it as needed
+    String userID = jsonData['userID'];
     double time = jsonData['time'];
     double output = jsonData['output'] * 100 ?? 0;
-    double controlSignal = jsonData['control_signal'] * 100 ?? 0;
+    double controlSignal = jsonData['control_signal']?? 0;
     double setPoint = jsonData['setPoint'] * 100 ?? 0;
     //String mode = jsonData['mode'];
     final provider = Provider.of<WaterLevelProvider>(context, listen: false);
     provider.setTankLevel(1, jsonData['output']);
+    final userIDStored = await getUserID();
 
     setState(() {
-      pvValue = output;
-      mvValue = controlSignal;
-      svValue = setPoint;
+      if(userID == userIDStored){
+        pvValue = output;
+        mvValue = controlSignal;
+        svValue = setPoint;
 
-      pvPoints.add(FlSpot(time, output));
-      svPoints.add(FlSpot(time, setPoint));
+        pvPoints.add(FlSpot(time, output));
+        svPoints.add(FlSpot(time, setPoint));
 
+        csvData.add([time, output, setPoint]); // For excel export
 
-      //change maxX if longer than 50 seconds
-      if(time > maxX){
-        setState(() {
-          maxX += 1;
-        });
+        //change maxX if longer than 50 seconds
+        if(time > maxX){
+          setState(() {
+            maxX += 1;
+          });
+        }
       }
       // Update your chart or state based on new data
     });
   }
-
-  //API Service
-  final APIServices apiServices = APIServices();
-
-  //Animation State
-  bool p201Stat = false;
-  bool sv203Stat = false;
-  bool tankFilled = false;
-  bool powerStat = false;
-  bool isFillingTank = false;
-  bool isFillingCylinder = false;
-  bool isDrainingTank = false;
-  bool isDrainingCylinder = false;
 
   void updateWaterLevel() {
     final provider = Provider.of<WaterLevelProvider>(context, listen: false);
@@ -128,32 +167,42 @@ class _SE2702State extends State<SE2702> {
     }
   }
 
-  //PID Control and Value
-  double pvValue = 50.0;
-  double mvValue = 30.0;
-  double svValue = 50.0;
+  void exportChartToCSV(List<List<dynamic>> data) {
+    // Convert data to CSV string
+    String csvData = const ListToCsvConverter().convert(data);
+    DateTime dateTime = DateTime.now();
+    String dateTimeString = dateTime.toString();
 
-  final kP = TextEditingController();
-  final kI = TextEditingController();
-  final kD = TextEditingController();
-  final svTextController = TextEditingController();
-  final mvTextController = TextEditingController();
+    // Encode the CSV data
+    final bytes = utf8.encode(csvData);
+    final blob = html.Blob([bytes]);
+    final url = html.Url.createObjectUrlFromBlob(blob);
+    final anchor = html.AnchorElement(href: url);
 
-  //fl_chart settings
-  final limitCount = 1000;
-  var svPoints = <FlSpot>[];
-  var pvPoints = <FlSpot>[];
+    // Set the download name for the CSV file
+    anchor.download = '$dateTimeString-se2702.csv';
 
-  double xValue = 0;
-  double step = 0.05;
+    // Trigger the download
+    anchor.click();
 
-  //Display API status message
-  String statusMessage = '';
-  bool isShowingMessage = false;
+    // Cleanup
+    html.Url.revokeObjectUrl(url);
+  }
 
   @override
   void initState() {
     super.initState();
+    try{
+      APIServices().runSE2702Model();
+    }catch(e){
+      showDialog(context: context, builder: (context) => ShareMessageDialog(
+          contentMessage: 'Failed to start SE2702 Model. Error message: ${e.toString()}'
+      ));
+    }
+
+    for (int i = 0; i < svPoints.length; i++) {
+      csvData.add([svPoints[i].x, svPoints[i].y, pvPoints[i].y]);
+    }
     //startWSConnections();  // Start Web Socket connection when the widget is initialized
   }
 
@@ -191,7 +240,7 @@ class _SE2702State extends State<SE2702> {
                                 boxShadow: [
                                   BoxShadow(
                                     color: powerStat
-                                        ? Colors.green[200]!
+                                        ? Colors.green[200] ?? Colors.green
                                         : Colors.transparent,
                                     blurRadius: 10.0,
                                     spreadRadius: 5.0,
@@ -220,8 +269,8 @@ class _SE2702State extends State<SE2702> {
                                 shape: BoxShape.circle,
                                 boxShadow: [
                                   BoxShadow(
-                                    color: powerStat & p201Stat ? Colors
-                                        .green[200]! : Colors.transparent,
+                                    color: powerStat & p201Stat ?
+                                    Colors.green[200] ?? Colors.green : Colors.transparent,
                                     blurRadius: 10.0,
                                     spreadRadius: 5.0,
                                   ),
@@ -249,7 +298,7 @@ class _SE2702State extends State<SE2702> {
                                 boxShadow: [
                                   BoxShadow(
                                     color: powerStat & sv203Stat ? Colors
-                                        .green[200]! : Colors.transparent,
+                                        .green[200] ?? Colors.green : Colors.transparent,
                                     blurRadius: 10.0,
                                     spreadRadius: 5.0,
                                   ),
@@ -270,8 +319,6 @@ class _SE2702State extends State<SE2702> {
                             width: 10,
                             height: 130,
                             tankNumber: 1,
-                            //shouldAnimate: powerStat && p201Stat && sv203Stat && tankFilled,
-                            //shouldReverse: !powerStat || !p201Stat || !sv203Stat || !tankFilled,
                           )
                       ),
                       //Water Tank Animation
@@ -283,8 +330,6 @@ class _SE2702State extends State<SE2702> {
                             width: 22,
                             height: 45,
                             tankNumber: 2,
-                            //shouldAnimate: shouldAnimateTank,
-                            //shouldReverse: shouldReverseTank,
                           )
                       ),
                       //Arrow
@@ -359,8 +404,7 @@ class _SE2702State extends State<SE2702> {
                             left: 375,
                             top: 155,
                             child: Transform.rotate(
-                              angle: 1.571,
-                              //90Deg = 1.571, 180Deg = 3.142, 270Deg = 4.712,
+                              angle: 1.571, //90Deg = 1.571, 180Deg = 3.142, 270Deg = 4.712,
                               child: Lottie.asset(
                                   'assets/lotties/arrow-lottie.json',
                                   width: 50,
@@ -376,8 +420,7 @@ class _SE2702State extends State<SE2702> {
                             left: 450,
                             top: 230,
                             child: Transform.rotate(
-                              angle: 3.142,
-                              //90Deg = 1.571, 180Deg = 3.142, 270Deg = 4.712,
+                              angle: 3.142, //90Deg = 1.571, 180Deg = 3.142, 270Deg = 4.712,
                               child: Lottie.asset(
                                   'assets/lotties/arrow-lottie.json',
                                   width: 50,
@@ -392,8 +435,7 @@ class _SE2702State extends State<SE2702> {
                             left: 400,
                             top: 325,
                             child: Transform.rotate(
-                              angle: 3.142,
-                              //90Deg = 1.571, 180Deg = 3.142, 270Deg = 4.712,
+                              angle: 3.142, //90Deg = 1.571, 180Deg = 3.142, 270Deg = 4.712,
                               child: Lottie.asset(
                                   'assets/lotties/arrow-lottie.json',
                                   width: 50,
@@ -408,8 +450,7 @@ class _SE2702State extends State<SE2702> {
                             left: 300,
                             top: 400,
                             child: Transform.rotate(
-                              angle: 4.712,
-                              //90Deg = 1.571, 180Deg = 3.142, 270Deg = 4.712,
+                              angle: 4.712, //90Deg = 1.571, 180Deg = 3.142, 270Deg = 4.712,
                               child: Lottie.asset(
                                   'assets/lotties/arrow-lottie.json',
                                   width: 50,
@@ -606,10 +647,10 @@ class _SE2702State extends State<SE2702> {
                               ),
                             ),
                             const SizedBox(height: 12,),
-                            const Text('Simulation: Stop'),
+                            Text('Simulation: $currentStatus'),
                             //${cosPoints.last.x.toStringAsFixed(2)}
                             const SizedBox(height: 4,),
-                            const Text('PID Mode: Auto'),
+                            Text('PID Mode: $currentMode'),
                             const SizedBox(height: 12,),
                             Text('Process Variable: ${pvValue
                                 .toStringAsFixed(2)}'),
@@ -626,8 +667,7 @@ class _SE2702State extends State<SE2702> {
                   ),
                 ),
                 Visibility(
-                  visible: powerStat && p201Stat && sv203Stat &&
-                      tankFilled,
+                  visible: true,
                   child: Padding(
                     padding: const EdgeInsets.all(20.0),
                     child: Card(
@@ -661,9 +701,14 @@ class _SE2702State extends State<SE2702> {
                                           setState(() {
                                             pvPoints = []; // Clear the data
                                             svPoints = []; // Clear the data
+                                            maxX = 50;
                                           });
-                                          await apiServices.matlabControl(
-                                              'se270', null, 'start');
+                                          bool success = await apiServices.matlabControl('se270', null, 'start');
+                                          if(success){
+                                            setState(() {
+                                              currentStatus = 'Start';
+                                            });
+                                          }
                                         }catch(e){
                                           if(!mounted)return;
                                           showDialog(
@@ -693,8 +738,12 @@ class _SE2702State extends State<SE2702> {
                                       onPressed: () async {
                                         try{
                                           stopWSConnections();
-                                          await apiServices.matlabControl(
-                                              'se270', null, 'stop');
+                                          bool success = await apiServices.matlabControl('se270', null, 'exit');
+                                          if(success){
+                                            setState(() {
+                                              currentStatus = 'Stop';
+                                            });
+                                          }
                                         }catch(e){
                                           if(!mounted)return;
                                           showDialog(
@@ -730,8 +779,12 @@ class _SE2702State extends State<SE2702> {
                                   ElevatedButton(
                                       onPressed: () async {
                                         try{
-                                          await apiServices
-                                              .switchAutoMode();
+                                          bool success = await apiServices.setControlCommand('se270', null, 'auto');
+                                          if(success){
+                                            setState(() {
+                                              currentMode = 'Auto';
+                                            });
+                                          }
                                         }catch(e){
                                           if(!mounted)return;
                                           showDialog(
@@ -760,8 +813,13 @@ class _SE2702State extends State<SE2702> {
                                   ElevatedButton(
                                       onPressed: () async {
                                         try{
-                                          await apiServices
-                                              .switchManualMode();
+                                          bool success = await apiServices.setControlCommand('se270', null, 'manual');
+                                          if(success){
+                                            setState(() {
+                                              currentMode = 'Manual';
+                                              mvTextController.text = mvValue.toStringAsFixed(2);
+                                            });
+                                          }
                                         }catch(e){
                                           if(!mounted)return;
                                           showDialog(
@@ -928,6 +986,7 @@ class _SE2702State extends State<SE2702> {
                                         decimal: true,
                                       ),
                                       decoration: const InputDecoration(
+                                        labelText: 'Enter a number (0-100)',
                                         border: UnderlineInputBorder(),
                                         isDense: true,
                                         filled: true,
@@ -935,10 +994,19 @@ class _SE2702State extends State<SE2702> {
                                       ),
                                       onSubmitted: (String value) async {
                                         try{
-                                          await apiServices.setValueCommand(
-                                              'se270',null,
-                                              'changeSetPoint', 'setPoint',
-                                              double.parse(value));
+                                          double filterValue = double.tryParse(value) ?? 0;
+                                          if(filterValue < 0 || filterValue > 100){
+                                            if(!mounted)return;
+                                            showDialog(
+                                                context: context,
+                                                builder: (context) => const AlertDialog(
+                                                    title: Text('Invalid Input'),
+                                                    content: Text('Please enter a number between 0 and 100.')
+                                                ));
+                                          }else{
+                                            filterValue = filterValue / 100;
+                                            await apiServices.setValueCommand('se270',null, 'changeSetPoint', 'setPoint', filterValue);
+                                          }
                                         }catch(e){
                                           if(!mounted)return;
                                           showDialog(
@@ -970,11 +1038,18 @@ class _SE2702State extends State<SE2702> {
                                       ),
                                       onSubmitted: (String value) async {
                                         try{
-                                          await apiServices.setValueCommand(
-                                              'se270',null,
-                                              'updateConstant',
-                                              'constantValue',
-                                              double.parse(value));
+                                          double filterValue = double.tryParse(value) ?? 0;
+                                          if(filterValue < 0 || filterValue > 100){
+                                            if(!mounted)return;
+                                            showDialog(
+                                                context: context,
+                                                builder: (context) => const AlertDialog(
+                                                    title: Text('Invalid Input'),
+                                                    content: Text('Please enter a number between 0 and 100.')
+                                                ));
+                                          }else{
+                                            await apiServices.setValueCommand('se270',null, 'updateConstant', 'constantValue', filterValue);
+                                          }
                                         }catch(e){
                                           if(!mounted)return;
                                           showDialog(
@@ -997,30 +1072,39 @@ class _SE2702State extends State<SE2702> {
                 ),
               ],
             ),
-            Padding(
+            pvPoints.isNotEmpty && svPoints.isNotEmpty
+                ? Padding(
               padding: const EdgeInsets.all(20),
               child: Card(
                 elevation: 20,
                 child: Column(
                   mainAxisAlignment: MainAxisAlignment.start,
                   children: [
-                    const Padding(
-                      padding: EdgeInsets.all(24.0),
-                      child: Text(
-                        'SE270-2 PROCESS CONTROL CHART',
-                        style: TextStyle(
-                            fontSize: 24
-                        ),
+                    Padding(
+                      padding: const EdgeInsets.all(24.0),
+                      child: Row(
+                        children: [
+                          const Text(
+                            'SE270-2 PROCESS CONTROL CHART',
+                            style: TextStyle(
+                                fontSize: 24
+                            ),
+                          ),
+                          IconButton(
+                            onPressed: (){
+                              exportChartToCSV(csvData);
+                            },
+                            icon: const Icon(Icons.import_export_sharp))
+                        ],
                       ),
                     ),
-                    pvPoints.isNotEmpty && svPoints.isNotEmpty
-                        ? AspectRatio(
+                    AspectRatio(
                       aspectRatio: 3.5,
                       child: LineChart(
                         LineChartData(
                           minY: 0,
                           maxY: 100,
-                          minX: 0,
+                          minX: minX,
                           //sinPoints.first.x,
                           maxX: maxX,
                           //sinPoints.last.x,
@@ -1084,11 +1168,10 @@ class _SE2702State extends State<SE2702> {
                         ),
                       ),
                     )
-                        : Container(),
                   ],
                 ),
               ),
-            ),
+            ): Container(),
           ],
         ),
       ),
@@ -1111,4 +1194,25 @@ class _SE2702State extends State<SE2702> {
     stopWSConnections();  // Close the TCP connection when the widget is disposed
     super.dispose();
   }
+}
+
+Widget visibleArrow(bool visible, double? left, double? top, double? right, double? bottom, double angle){
+  return Visibility(
+    visible: visible,
+    child: Positioned(
+        left: left,
+        top: top,
+        right: right,
+        bottom: bottom,
+        child: Transform.rotate(
+          angle: angle,
+          //90Deg = 1.571, 180Deg = 3.142, 270Deg = 4.712,
+          child: Lottie.asset(
+              'assets/lotties/arrow-lottie.json',
+              width: 50,
+              height: 50
+          ),
+        )
+    ),
+  );
 }

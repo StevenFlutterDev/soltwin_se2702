@@ -33,12 +33,12 @@ class MyApp extends StatelessWidget {
         GoRoute(
           path: '/se2702',
           builder: (context, state) => const SE2702(),
-          redirect: (context, state) async {
+          /*redirect: (context, state) async {
             // Ensure the provider is accessed within the context where it is available
             final loginProvider = Provider.of<LoginProvider>(context, listen: false);
             bool isAuthenticated = loginProvider.isLoggedIn;
             return isAuthenticated ? null : '/';
-          },
+          },*/
         ),
         GoRoute(
           path: '/he104',
